@@ -1,7 +1,7 @@
 
 
 document.addEventListener("DOMContentLoaded", function() {
-
+//--расширенный hint(автозаполнение)----------------->
   function getURL(url, c) {
     var xhr = new XMLHttpRequest();
     xhr.open("get", url, true);
@@ -30,6 +30,8 @@ document.addEventListener("DOMContentLoaded", function() {
     })
     editor.on("cursorActivity", function(cm) { server.updateArgHints(cm); });
   });
+//<--расширенный hint(автозаполнение)-----------------
+
 
 var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
     mode: "javascript",
@@ -144,6 +146,7 @@ function openSearchDialog() {
     }
   })
 //<----поиск----------------------------------------
+
 
 //   var searchButton = document.getElementById("searchButton");
 //   var replaceButton = document.getElementById("replaceButton");

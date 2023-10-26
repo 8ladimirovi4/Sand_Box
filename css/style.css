@@ -10,7 +10,7 @@ body{
   height: 300px;
   width: 700px;
   border: solid 1px lightgrey;
-  height: auto;
+  
 }
 
 .breakpoints {width: .8em;}
