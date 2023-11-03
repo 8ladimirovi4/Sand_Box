@@ -12,7 +12,7 @@ var timeConditionConfig = {
       ],
 
   }
-
+//
 var schedulePeriodTypes = [
   { id: 1, value: 'Период', b: 'PerHour' },
   { id: 2, value: 'Неделя', b: 'PerWeek' },
