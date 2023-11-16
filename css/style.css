@@ -1,8 +1,40 @@
 
 body{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  height: 100vh;
+margin: 0 auto;
+padding: 0;
+vertical-align: middle;
 }
+
+
+@media print{
+  .container{
+   page-break-inside: avoid 
+}
+.webix_cell {
+  page-break-inside: avoid;
+  background-color: lightcoral;
+}
+}
+
+@page{
+  margin: 2cm;
+}
+
+.parent{
+  width: 200px;
+  height: 200px;
+  background-color: lightgray;
+}
+.child{
+  width: 100px;
+  height: 100px;
+  background-color: aqua;
+  margin: 10px;
+}
+
+.parent .child{
+  background-color:lightcoral;
+}
+
+
+
