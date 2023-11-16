@@ -7,17 +7,22 @@ vertical-align: middle;
 
 
 @media print{
-  .container{
-   page-break-inside: avoid 
+ 
+div[view_id*="headerlayout"] {
+	display: block !important; /*необходимо для page-break-inside: avoid* При свойстве display: inline-block работать не будет/
+}
+div[view_id*="layout"] {
+	display: block !important; /*необходимо для page-break-inside: avoid*/
 }
 .webix_cell {
   page-break-inside: avoid;
   background-color: lightcoral;
 }
+
 }
 
 @page{
-  margin: 2cm;
+  margin: 1cm;
 }
 
 .parent{

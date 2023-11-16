@@ -15,3 +15,18 @@
 // block.appendChild(innerBlock)
 // document.body.appendChild(block)
 // }
+
+var elementsHeader = document.querySelectorAll('div[view_id*="headerlayout"]');
+
+// Установить свойство display: block для каждого найденного элемента
+elementsHeader.forEach(function(element) {
+    element.style.display = 'block';
+});
+
+var elementsLayout = document.querySelectorAll('div[view_id*="layout"]');
+
+// Установить свойство display: block для каждого найденного элемента
+elementsLayout.forEach(function(element) {
+    element.style.display = 'block';
+});
+//layout
