@@ -9,7 +9,10 @@ vertical-align: middle;
 @media print{
  
 div[view_id*="headerlayout"] {
-	display: block !important; /*необходимо для page-break-inside: avoid* При свойстве display: inline-block работать не будет/
+	display: block !important; 
+  /*необходимо для page-break-inside: avoid* При свойстве display: inline-block работать не будет*/
+  /* так же  page-break-inside: avoid не будет работать с position: relative */
+  /* ссылка на статью https://stackoverflow.com/questions/34534231/page-break-insideavoid-not-working */
 }
 div[view_id*="layout"] {
 	display: block !important; /*необходимо для page-break-inside: avoid*/
