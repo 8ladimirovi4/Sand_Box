@@ -1,32 +1,46 @@
 
 
-// for(let i = 0; i < 100; i++){
-// const block = document.createElement('div')
-// block.classList = 'container'
-// block.style.width = '100%'
-// block.style.height = '50px'
-// block.style.border = '1px solid black'
-// block.style.display = 'flex'
-// block.style.alignItems = 'center'
+function findCommonParentsByClass(className) {
+    const elements = document.querySelectorAll(`.${className}`);
+    
+    // Проверяем, что найдены хотя бы два дочерних элемента
+    if (elements.length < 2) {
+        return [];
+    }
 
-// const innerBlock = document.createElement('div')
-// innerBlock.classList = 'inner'
-// innerBlock.innerText = 'Давно выяснено, что при оценке дизайна и композиции'
-// block.appendChild(innerBlock)
-// document.body.appendChild(block)
-// }
+    // Получаем родителя первого дочернего элемента
+    let commonParents = getParents(elements[0]);
 
-var elementsHeader = document.querySelectorAll('div[view_id*="headerlayout"]');
+    // Итерируем через остальные дочерние элементы
+    for (let i = 1; i < elements.length; i++) {
+        // Получаем родителя текущего дочернего элемента
+        const parents = getParents(elements[i]);
 
-// Установить свойство display: block для каждого найденного элемента
-elementsHeader.forEach(function(element) {
-    element.style.display = 'block';
-});
+        // Фильтруем общих родителей
+        commonParents = commonParents.filter(parent => parents.includes(parent));
 
-var elementsLayout = document.querySelectorAll('div[view_id*="layout"]');
+        // Если общих родителей не осталось, выходим из цикла
+        if (commonParents.length === 0) {
+            break;
+        }
+    }
 
-// Установить свойство display: block для каждого найденного элемента
-elementsLayout.forEach(function(element) {
-    element.style.display = 'block';
-});
-//layout
+    return commonParents;
+}
+
+function getParents(element) {
+    const parents = [];
+    
+    let parent = element.parentNode;
+    
+    while (parent) {
+        parents.push(parent);
+        parent = parent.parentNode;
+    }
+
+    return parents;
+}
+
+// Пример использования:
+const commonParents = findCommonParentsByClass('webix_cell');
+console.log(commonParents);

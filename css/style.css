@@ -1,48 +1,33 @@
-
-body{
-margin: 0 auto;
-padding: 0;
-vertical-align: middle;
+.container{
+  min-height: 100px;
+border: 3px solid green;
 }
 
+.col{
 
-@media print{
- 
-div[view_id*="headerlayout"] {
-	display: block !important; 
-  /*необходимо для page-break-inside: avoid* При свойстве display: inline-block работать не будет*/
-  /* так же  page-break-inside: avoid не будет работать с position: relative */
-  /* ссылка на статью https://stackoverflow.com/questions/34534231/page-break-insideavoid-not-working */
-}
-div[view_id*="layout"] {
-	display: block !important; /*необходимо для page-break-inside: avoid*/
-}
-.webix_cell {
-  page-break-inside: avoid;
-  background-color: lightcoral;
+  border: 3px solid lightblue;
+  width: 150px;
+  min-height: 100px; 
+  overflow: hidden;
 }
 
-}
-
-@page{
-  margin: 1cm;
-}
-
-.parent{
+.row{
+  border: 1px solid red;
   width: 200px;
-  height: 200px;
-  background-color: lightgray;
-}
-.child{
-  width: 100px;
-  height: 100px;
-  background-color: aqua;
-  margin: 10px;
+  font-size: xx-large;
 }
 
-.parent .child{
-  background-color:lightcoral;
+.col .row{
+  width: 100%;
 }
 
-
-
+@media print {
+  /* .col {
+    display: table;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+  .row{
+    display: table-row;
+  } */
+}
