@@ -18,7 +18,7 @@ rows:[
     rowLineHeight: 15,
     rowHeight: 15,
     scroll: false,
-    data: data,
+    data: [],
     css: {
       'font-style': 'normal',
       'font-size': '15px;',
@@ -27,8 +27,10 @@ rows:[
       autowidth: true,
       autoheight: true,
     },
+    ready: function(){
+      this.define('data', data);
+      this.adjustRowHeight()
+    }
 }
 ]
 });
-
-$$('dt').adjustRowHeight();
