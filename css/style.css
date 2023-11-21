@@ -36,6 +36,8 @@ padding-right: 5px;
 @media print {
   .row{
     page-break-inside: avoid;
+    background-color: aqua;
+    margin-left: 100px;
   }
   .container{
     display: contents;
