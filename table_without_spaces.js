@@ -1,6 +1,9 @@
 const data = []
-
-
+function printContent(){
+    webix.print($$("dt"), {
+        autowidth:true
+    });
+}
 
 var datatable = webix.ui({
     container: 'data_table',

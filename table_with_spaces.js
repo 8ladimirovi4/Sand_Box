@@ -1,10 +1,19 @@
 const data = []
 
 
+//webix.env.cdn = "/111/html2canvas.min.js";
+
+function printContent(){
+    webix.toPDF($$("dt"), {
+        autowidth:true
+    });
+}
+
 
 var datatable = webix.ui({
     container: 'data_table',
     view: 'layout',
+    id: 'lo',
 rows:[
     {
     container: 'data_table',
