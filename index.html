@@ -4,15 +4,16 @@
     <title>Пример диаграммы с mxGraph</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+   
     <link rel="stylesheet" type="text/css" href="css/style.css">
-    <script src="https://cdn.webix.com/edge/webix.js" type="text/javascript"></script>
-    <link rel="stylesheet" href="https://cdn.webix.com/edge/webix.css" type="text/css">
-
    
 </head>
 <body>
+<input type="number" id="rightAxis" placeholder="значения справа" value="0"> <text>увеличить шкалу справа</text><br/>
+<input type="number" id="leftAxis" placeholder="Значения слева"value="2"> <text>увеличить шкалу слева</text><br/>
+<input type="number" id="dataInput" > <text>ввести значение</text><br/>
+<canvas id="myChart"></canvas>
 <script type="text/javascript" src="script.js"></script>
 
-<h1>Hello world</h1>
 </body>
 </html>
