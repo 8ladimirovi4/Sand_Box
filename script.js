@@ -26,10 +26,34 @@ const chart = new Chart(ctx, {
     maintainAspectRatio: false,
     scales: {
       x: {
-       type: 'linear', // Тип шкалы X (линейная)
-       position: 'bottom', // Позиция шкалы X
-       min: scale[0],
-       max: null,
+        display: true,
+        type: 'time',
+        autoSkip: false,
+        position: 'bottom',
+        distribution: 'linear',
+        bounds: 'ticks',
+        time: {
+          isoWeekday: true,
+          unit: 'day',
+          //unitStepSize: 10,
+          //stepSize: 1,
+          //precision: 1,
+          //round: true,
+          //minUnit: 'hour',
+          displayFormats: {
+            millisecond: 'ss.SSS',
+            second: 'mm:ss.SSS',
+            minute: 'HH:mm:ss',
+            hour: 'DD.MM HH:mm',
+            day: 'DD.MM.YYYY',
+            week: 'WW.YYYY',
+            month: 'DD.MM.YYYY',
+            quarter: 'Q YYYY',
+            year: 'YYYY',
+          },
+        },
+        min: '1990-11-06 23:39:30',          
+        max: '2230-11-06 23:39:30',  
       },
       y: {
         beginAtZero: false, // Начинать шкалу Y не с нуля
@@ -57,6 +81,7 @@ const lastXValue = currentLabels1[lastIndex];
 chart.options.scales.x.max = valX ? lastXValue + Number(valX) : chart.options.scales.x.max
 
 chart.options.scales.x.min = valY ? Number(valY) : chart.options.scales.x.min
+
 chart.update();
 }
 
@@ -77,7 +102,6 @@ function addData() {
   // Добавляем метку (может быть номером точки)
   const newLabel = currentLabels.length + 1;
   currentLabels.push(newLabel);
-
   // Обновляем график
   chart.update();
 
