@@ -10,11 +10,27 @@
    
 </head>
 <body>
-<input type="number" id="rightAxis" placeholder="значения справа" value="0"> <text>увеличить шкалу справа</text><br/>
-<input type="number" id="leftAxis" placeholder="Значения слева"value="2"> <text>увеличить шкалу слева</text><br/>
-<input type="number" id="dataInput" > <text>ввести значение</text><br/>
+<input type="number" id="rightAxis" placeholder="значения справа" value="5"> <text>увеличить шкалу справа</text><br/>
+<input type="number" id="leftAxis" placeholder="Значения слева"value="5"> <text>увеличить шкалу слева</text><br/>
+<input type="number" id="dataInput" value="0"> <text>данные</text><br/>
+<br>
+<select name="time" id="time_range"> 
+    <option value="">Временной диапазон</option>
+    <option value="millisecond">millisecond</option>
+    <option value="second">second</option>
+    <option value="minute">minute</option>
+    <option value="hour">hour</option>
+    <option value="day">day</option>
+    <option value="week">week</option>
+    <option value="month">month</option>
+    <option value="year">year</option>
+  </select>
+  <text>Значение по умолчанию days</text>
+  <br>
+  <br>
+  <input type="number" value="1" id="step_input"> <text>Шаг сетки</text>
 <canvas id="myChart"></canvas>
 <script type="text/javascript" src="script.js"></script>
 
-</body>
+</body> 
 </html>
