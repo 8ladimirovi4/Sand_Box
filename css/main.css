@@ -1,0 +1,17 @@
+.main{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+img{
+    width: 300px;
+    margin-bottom: 30px;
+}
+
+h1{
+    margin-bottom: 30px;
+}
+
+article{
+    width: 1000px;
+}
