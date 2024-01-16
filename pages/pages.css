@@ -1,0 +1,39 @@
+main{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0px 100px
+}
+
+.movie_container{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+   height: 500px;
+   width: 320px;
+}
+img{
+   height: 400px;
+}
+
+span{
+    margin: 5px;
+}
+
+.movie_rate_container{
+    position: absolute;
+    top:10%;
+    left:3%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 20px;
+    background-color: rgb(0,128,0,0.8)
+}
+
+.movie_rate{
+    font-weight: bold;
+    color: white;
+}

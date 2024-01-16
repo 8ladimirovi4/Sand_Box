@@ -1,2 +1,22 @@
 
+h1{
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgb(204,179,0);
+    font-size: 100px;
+}
+
+h2{
+    position: absolute;
+    top: 50%;
+    left: 55%;
+    transform: translate(-60%, -60%);
+    color: rgb(204,179,0);
+}
+
+main{
+   position: relative;
+}
 
