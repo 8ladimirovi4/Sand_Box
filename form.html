@@ -5,35 +5,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="form.css">
+    <link rel="stylesheet" href="./form.css">
+    <script src="script.js" defer></script>
 </head>
 
 <body>
-    <fieldset>
-        <legend>Легенда</legend>
-    <form method="GET" action="" autocomplete="on">
-        <br>
-        <label for="radio1">radio1</label>
-        <input type="radio" name="input" id="radio1" checked>
-        <br>
-        <br>
-        <label for="radio2">radio2</label>
-        <input type="radio" name="input" id="radio2">
-        <input type="text" required class="input_text" name="text">
-
-        <br>
-        <label for="textarea">textarea</label>
-        <textarea style="resize: none" name="textarea" id="textarea" cols="10" rows="10"></textarea>
-        <button type="submit" >submit</button>
-        <button type="reset">reset</button>
-    </form>
-    <select name="" id="" >
-        <option value="">1</option>
-        <option value="">2</option>
-        <option value="">3</option>
-        <option value="">4</option>
-    </select>
-</fieldset>
+    <div class="page_wrapper">
+        <h1 class="message form_hidden">Ваша форма успешно отправлена!</h1>
+        <form action="" class="form_show">
+            <div class="form_common form_registration_container">
+                <span>Регистрация</span>
+            </div>
+            <div class="form_common form_credencials_container">
+                <fieldset class="form_credencials_fieldset">
+                    <legend>Имя</legend>
+                    <input class="form_credencials_input" type="text" placeholder="Имя">
+                </fieldset>
+                <fieldset class="form_credencials_fieldset">
+                    <legend>Фамилия</legend>
+                    <input class="form_credencials_input" type="text" placeholder="Фамилия">
+                </fieldset>
+            </div>
+            <div class="form_common form_email_container">
+                    <div class="form_email_sign">
+                        <span>@</span>
+                    </div>
+                    <div class="form_email_text">
+                        <fieldset class="form_email_fieldset">
+                            <legend>E-mail</legend>
+                        <input type="email" class="form_email_input">
+                    </fieldset>
+                    </div>
+            </div>
+            <div class="form_common">
+                <fieldset class="form_password_fieldset">
+                    <legend>Пароль</legend>
+                    <input type="password" class="form_password_input">
+                </fieldset>
+            </div>
+            <div class="form_common">
+                <fieldset class="form_password_fieldset">
+                    <legend>Пароль повторно</legend>
+                    <input type="password" class="form_password_input">
+                </fieldset>
+            </div>
+            <div class="form_common">
+                <fieldset class="form_contry_fieldset">
+                    <legend>Страна</legend>
+                    <select class="form_contry_select" name="country">
+                        <option>USA</option>
+                        <option>Germany</option>
+                        <option>Canada</option>
+                    </select>
+                </fieldset>
+            </div>
+            <div class="form_common form_news_container">
+                <input type="checkbox" class="form_news_input" name="news">
+                <label for="news">Получать новости</label>
+            </div>
+            <div class="form_common form_button_container">
+                <button type="submit" class="toggle">Регистрация</button>
+            </div>
+        </form>
+    </div>
 </body>
 
 </html>

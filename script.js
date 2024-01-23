@@ -19,3 +19,12 @@ console.log("Сообщение в группе 2");
 console.group("Вложенная группа");
 console.log("Сообщение во вложенной группе");
 console.groupEnd();
+
+const btn = document.querySelector('.toggle')
+const form = document.querySelector('form')
+const h1 = document.querySelector('.message')
+btn.addEventListener('click', (e) => {
+    e.preventDefault()
+form.classList = 'form_hidden'
+h1.classList = 'form_show'
+})
