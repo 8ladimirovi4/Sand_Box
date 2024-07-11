@@ -3,24 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>HLS Stream</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
-<script>
-//     const params = {
-//   cam: 17,
-//   // Другие параметры, если необходимо
-// };
-// const queryString = new URLSearchParams(params).toString();
-function openInNewWindow() 
-{
-    const url = "http://127.0.0.1:3000/en/demo-easy.html?stream=1&cam=10"
-    const windowFeatures = 'width=700,height=500,resizable=yes,scrollbars=yes';
-    window.open(url, '_blank', windowFeatures);
-} 
-</script>
+<style>
+    .container{
+       display: flex;
+       gap: 20;
+    }
+    .real_time, .play_back{
+        width: 640px;
+        height: 400px;
+    } 
+    #video_real_time, #video_play_back {
+        width: fit-content;
+        height: fit-content;
+    }
+    .hidden{
+        display: none;
+    }
+    .visible{
+        display: block;
+    }
+</style>
 <body>
-    <h1>Web Scada на https</h1>
-    <iframe id="content-frame" style="width: 100%; height: 500px; border: none; display: none;"></iframe>
-    <a href="#" onclick="openInNewWindow();">Ссылка на видеопоток</a>
+    <div class="container">
+        <div class="real_time_container">
+            <div class="real_time">
+                <video id="video_real_time" class="hidden" controls autoplay></video>
+            </div>
+           <button id="btn_real_time">get real time</button>
+        </div>
+        <div class="play_back_container">
+            <div class="play_back_container">
+                <div class="play_back">
+                    <video id="video_play_back" class="hidden" controls autoplay></video>
+                </div>
+               <button id="btn_play_back">get play back</button>
+        </div>
+    </div>
+   
+    <script>
+        var videoRealTime = document.getElementById('video_real_time');
+        var videoPlayBack = document.getElementById('video_play_back');
+        var btnRealTime = document.getElementById('btn_real_time');
+        var btnPlayBack = document.getElementById('btn_play_back');
+        var hls = new Hls();
+
+        btnRealTime.addEventListener('click', (e) => {
+            videoRealTime.classList = 'visible'
+            if (Hls.isSupported()) {
+            hls.loadSource('https://127.0.0.1:3001/real_time/out.m3u8');
+            hls.attachMedia(videoRealTime);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            });
+          } 
+        })
+
+        btnPlayBack.addEventListener('click', (e) => {
+             videoPlayBack.classList = 'visible'
+            if (Hls.isSupported()) {
+            hls.loadSource('https://127.0.0.1:3001/play_back/out.m3u8');
+            hls.attachMedia(videoPlayBack);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            });
+          } 
+        })
+        
+       
+    </script>
+    
 </body>
 </html>

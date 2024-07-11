@@ -1,24 +1,29 @@
-// Подключение библиотеки Express
 const express = require('express');
+const https = require('https');
+const fs = require('fs');
 const path = require('path');
-const cors = require('cors'); // Подключаем пакет cors
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const cors = require('cors');
 
 const app = express();
-const port = 3001;
+const port = 3000;
 
-app.use(express.static(path.join(__dirname, 'public'), {
-    extensions: ['html', 'htm', 'css', 'js', 'json', 'txt', 'xml'] // Перечисляем все основные типы файлов
-  }));
+const options = {
+    key: fs.readFileSync(path.join(__dirname, './ssl/cert.key')),
+    cert: fs.readFileSync(path.join(__dirname, './ssl/cert.pem'))
+};
 
-  app.use(cors());
-  
-  
+app.use(express.static(path.join(__dirname, './'), {
+    extensions: ['html', 'htm', 'css', 'js', 'json', 'txt', 'xml']
+}));
+
+app.use(cors());
+
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '', 'index.html'));
-  });
+    res.sendFile(path.join(__dirname, './', 'index.html'));
+});
 
-// Запуск сервера на указанном порту
-app.listen(port, () => {
-  console.log(`Сервер запущен на http://127.0.0.1:${port}`);
+const server = https.createServer(options, app);
+
+server.listen(port, () => {
+    console.log(`Сервер запущен на https://127.0.0.1:${port}`);
 });
