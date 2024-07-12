@@ -3,7 +3,6 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
-const { spawn } = require('child_process');
 const config = require("./config/config");
 
 const indexRouter = require("./routes/indexRouter");
@@ -11,7 +10,6 @@ const realTimeRouter = require("./routes/realTimeRouter");
 
 const app = express();
 const port = 3000;
-
 
 const options = {
   key: fs.readFileSync(path.join(__dirname, './ssl/cert.key')),
@@ -21,7 +19,7 @@ const options = {
 config(app);
 app.use(cors());
 
-
+//routers
 app.use("/", indexRouter);
 app.use('/real_time', realTimeRouter)
 
