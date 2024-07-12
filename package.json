@@ -7,6 +7,8 @@
     "express": "^4.19.2",
     "fs": "^0.0.1-security",
     "http-proxy-middleware": "^3.0.0",
+    "mime": "^4.0.4",
+    "morgan": "^1.10.0",
     "node-rtsp-stream": "^0.0.9",
     "path": "^0.12.7",
     "rtsp-stream": "^1.0.0"

@@ -1,0 +1,16 @@
+.container{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100px;
+    margin: 10px;
+}
+.container_link-form{
+    display: flex;
+    gap:5px;
+}
+#video_real_time, #video_play_back {
+     width: fit-content;
+     height: fit-content;
+ }
+ 
