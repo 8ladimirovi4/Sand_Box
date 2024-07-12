@@ -40,34 +40,3 @@ const loadScriptsAndStyles = ((files, callback) => {
 })(filesBundle, () => {
   console.log('===>scripts loaded succesfully')
 })
-
-
-
-
-
-
-// var videoRealTime = document.getElementById('video_real_time');
-//         var videoPlayBack = document.getElementById('video_play_back');
-//         var btnRealTime = document.getElementById('btn_real_time');
-//         var btnPlayBack = document.getElementById('btn_play_back');
-//         var hls = new Hls();
-
-//         btnRealTime.addEventListener('click', (e) => {
-//             videoRealTime.classList = 'visible'
-//             if (Hls.isSupported()) {
-//             hls.loadSource('https://127.0.0.1:3001/real_time/out.m3u8');
-//             hls.attachMedia(videoRealTime);
-//             hls.on(Hls.Events.MANIFEST_PARSED, function () {
-//             });
-//           } 
-//         })
-
-//         btnPlayBack.addEventListener('click', (e) => {
-//              videoPlayBack.classList = 'visible'
-//             if (Hls.isSupported()) {
-//             hls.loadSource('https://127.0.0.1:3001/play_back/out.m3u8');
-//             hls.attachMedia(videoPlayBack);
-//             hls.on(Hls.Events.MANIFEST_PARSED, function () {
-//             });
-//           } 
-//         })

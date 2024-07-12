@@ -1,8 +1,8 @@
-const express = require('express');
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
-const cors = require('cors');
+const express = require("express");
+const https = require("https");
+const fs = require("fs");
+const path = require("path");
+const cors = require("cors");
 const config = require("./config/config");
 
 const indexRouter = require("./routes/indexRouter");
@@ -12,8 +12,8 @@ const app = express();
 const port = 3000;
 
 const options = {
-  key: fs.readFileSync(path.join(__dirname, './ssl/cert.key')),
-  cert: fs.readFileSync(path.join(__dirname, './ssl/cert.pem'))
+  key: fs.readFileSync(path.join(__dirname, "./ssl/cert.key")),
+  cert: fs.readFileSync(path.join(__dirname, "./ssl/cert.pem")),
 };
 
 config(app);
@@ -21,15 +21,13 @@ app.use(cors());
 
 //routers
 app.use("/", indexRouter);
-app.use('/real_time', realTimeRouter)
-
+app.use("/real_time", realTimeRouter);
 
 const server = https.createServer(options, app);
 
 // Путь к HLS сегментам
 //const hlsPath = path.join(__dirname, 'real_time');
 // hlsPath = path.join(__dirname, 'play_back');
-
 
 //Запуск FFmpeg real_time
 // const ffmpeg = spawn('ffmpeg', [
@@ -57,11 +55,11 @@ const server = https.createServer(options, app);
 // ffmpeg.stdout.on('data', (data) => {
 //     console.log(`stdout: ${data}`);
 //   });
-  
+
 //   ffmpeg.stderr.on('data', (data) => {
 //     console.error(`stderr: ${data}`);
 //   });
-  
+
 //   ffmpeg.on('close', (code) => {
 //     console.log(`child process exited with code ${code}`);
 //   });
@@ -69,4 +67,3 @@ const server = https.createServer(options, app);
 server.listen(port, () => {
   console.log(`Сервер запущен на https://127.0.0.1:${port}`);
 });
-

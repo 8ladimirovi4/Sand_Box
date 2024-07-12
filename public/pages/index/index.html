@@ -1,29 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HLS Stream</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <link rel="stylesheet" href="/pages/index/style.css">
+    <link rel="stylesheet" href="/pages/index/style.css" />
     <script type="text/javascript">
-        var bundle = [
-        '/common/help.js',
-        '/pages/index/index.js',
-        ]
+      var bundle = ["/common/help.js", "/pages/index/index.js"];
     </script>
     <script src="/common/main.js" defer></script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
- 
-     <form class="container_link-form" action="">
-    <input name="cam-no" class="container_link-form_cam-no" type="number" placeholder="cam No" value="">
-    <input type="submit" value="confirm" class="container_link-form_confirm-btn">
+      <h2>Video Stream Tool</h2>
+      <form class="container_link-form" action="">
+        <input
+          name="cam-no"
+          class="container_link-form_cam-no"
+          type="number"
+          placeholder="cam No"
+          value=""
+        />
+        <input
+          type="submit"
+          value="confirm"
+          class="container_link-form_confirm-btn"
+        />
       </form>
- 
-    <a id="real-time" href="#" >link realTime</a>
+      <div class="container_confirm">
+        <p class="container_confirm_text">Put camera No and press the link below</p>
+      </div>
 
-</div>
-</body>
+      <a id="real-time" href="#">link realTime</a>
+    </div>
+  </body>
 </html>
