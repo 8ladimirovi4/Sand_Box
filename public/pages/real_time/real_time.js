@@ -2,7 +2,7 @@ const url = new URL(location.href);
 const searchParams = new URLSearchParams(url.search);
 const id = searchParams.get("id");
 const camNo = searchParams.get("camNo");
-const VIDEO_REAL_TIME = document.getElementById("video_real_time");
+const VIDEO = document.getElementById("video");
 const TITLE = document.querySelector('.container_title')
 
 //звершить ffmpeg процесс
@@ -37,12 +37,12 @@ function loadVideo() {
     hls.loadSource(
       `${url.protocol}//${url.hostname}:${url.port}/real_time_data/${id}/out.m3u8`
     );
-    hls.attachMedia(VIDEO_REAL_TIME);
+    hls.attachMedia(VIDEO);
     hls.on(Hls.Events.MANIFEST_PARSED, function () {});
-  } else if (VIDEO_REAL_TIME.canPlayType("application/vnd.apple.mpegurl")) {
-    VIDEO_REAL_TIME.src = `${url.protocol}//${url.hostname}:${url.port}/real_time_data/${id}/out.m3u8`;
-    VIDEO_REAL_TIME.addEventListener("canplay", function () {
-      VIDEO_REAL_TIME.play().catch((error) => {
+  } else if (VIDEO.canPlayType("application/vnd.apple.mpegurl")) {
+    VIDEO.src = `${url.protocol}//${url.hostname}:${url.port}/real_time_data/${id}/out.m3u8`;
+    VIDEO.addEventListener("canplay", function () {
+      VIDEO.play().catch((error) => {
         console.error("Error playing video:", error);
       });
     });

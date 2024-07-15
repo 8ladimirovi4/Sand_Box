@@ -7,6 +7,7 @@ const config = require("./config/config");
 
 const indexRouter = require("./routes/indexRouter");
 const realTimeRouter = require("./routes/realTimeRouter");
+const playBackRouter = require("./routes/playBackRouter");
 
 const app = express();
 const port = 3000;
@@ -22,6 +23,7 @@ app.use(cors());
 //routers
 app.use("/", indexRouter);
 app.use("/real_time", realTimeRouter);
+app.use("/playback", playBackRouter);
 
 const server = https.createServer(options, app);
 
