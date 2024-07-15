@@ -8,13 +8,13 @@ const VIDEO = document.getElementById("video");
 const TITLE = document.querySelector('.container_title')
 
 //звершить ffmpeg процесс
-// window.addEventListener("beforeunload", async function (event) {
-//     try {
-//       await fetch(`/playback/stop_ffmpeg_process/${id}`);
-//     } catch (error) {
-//       console.error("Error stopping ffmpeg process:", error);
-//     }
-//   });
+window.addEventListener("beforeunload", async function (evt) {
+    try {
+      await fetch(`/playback/stop_ffmpeg_process/${id}`);
+    } catch (error) {
+      console.error("Error stopping ffmpeg process:", error);
+    }
+  });
 
 const checkFileAvailability = async () => {
     try {

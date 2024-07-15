@@ -31,16 +31,21 @@ const createDirectory = async (dirPath) => {
       }
     });
   };
-  const getVideoContent = async (dirPath, camNo, id) => {
+  const getVideoContent = async (dirPath, camNo, startPoint, endPoint, id) => {
 ffmpeg = spawn('ffmpeg', [
     '-rtsp_transport', 'tcp',
-    '-i', 'rtsp://admin:Aa11111!@192.168.11.111:554/Streaming/tracks/1701/?starttime=20240715T000000Z;endtime=20240715T235959Z',
+    '-i', `rtsp://admin:Aa11111!@192.168.11.111:554/Streaming/tracks/${camNo}01/?starttime=${startPoint};endtime=${endPoint}`,
     '-an',
     '-c:v', 'copy',
     '-f', 'hls',
     '-hls_time', '2',
     path.join(dirPath, 'out.m3u8')
 ]);
+
+ffmpegPIDs.push({
+  camID: id,
+  ffmpegPID: ffmpeg.pid,
+});
 
 ffmpeg.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);
@@ -63,14 +68,16 @@ playBackRouter.get("/", (req, res) => {
   
     const cam = req.query.camNo;
     const id = req.query.id;
+    const startTime = req.query.startTime;
+    const endTime = req.query.endTime;
   
     // HLS dir path
     const mediaLocation = MEDIA_PATH + id;
   
-    (async (dirPath, cam, processID) => {
+    (async (dirPath, camNo, startPoint, endPoint, processID) => {
       await createDirectory(dirPath);
-      await getVideoContent(dirPath, cam, processID);
-    })(mediaLocation, cam, id);
+      await getVideoContent(dirPath, camNo, startPoint, endPoint, processID);
+    })(mediaLocation, cam, startTime, endTime, id);
   });
 
   //check manifest
@@ -87,5 +94,34 @@ playBackRouter.get("/", (req, res) => {
       }
     });
   });
+
+  //close ffmpeg connection
+  playBackRouter.get("/stop_ffmpeg_process/:id", (req, res) => {
+  const { id } = req.params;
+
+  const ffmpegProcess = ffmpegPIDs.find((process) => process.camID === id);
+
+  if (typeof ffmpegProcess === "object") {
+    try {
+      // Kill ffmpeg process using its PID
+      process.kill(ffmpegProcess.ffmpegPID);
+      // Remove the ffmpeg process from the array
+      ffmpegPIDs = ffmpegPIDs.filter((process) => process.camID !== id);
+
+      //remove media directory
+      removeDirectory(id);
+      res.status(200).send(`FFmpeg process with id ${id} terminated`);
+    } catch (err) {
+      res
+        .status(500)
+        .send(
+          `Failed to terminate FFmpeg process with id ${id}: ${err.message}`
+        );
+    }
+  } else {
+    res.status(404).send(`No FFmpeg process found with id ${id}`);
+  }
+});
+
 
 module.exports = playBackRouter;

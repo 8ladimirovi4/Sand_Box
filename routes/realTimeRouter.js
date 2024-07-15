@@ -35,20 +35,14 @@ const removeDirectory = (dirName) => {
 //ffmpeg real_time config
 const getVideoContent = async (dirPath, camNo, id) => {
   ffmpeg = spawn("ffmpeg", [
-    "-rtsp_transport",
-    "tcp",
-    "-i",
+    "-rtsp_transport", "tcp", "-i",
     `rtsp://admin:Aa11111!@192.168.11.111/Streaming/Channels/${camNo}02`,
     "-c:v",
     "libx264",
-    "-f",
-    "hls",
-    "-hls_time",
-    "2",
-    "-hls_list_size",
-    "1",
-    "-hls_flags",
-    "delete_segments",
+    "-f", "hls",
+    "-hls_time","2",
+    "-hls_list_size","1",
+    "-hls_flags","delete_segments",
     path.join(dirPath, "out.m3u8"),
   ]);
 
@@ -107,7 +101,7 @@ realTimeRouter.get("/check_file/:id", (req, res) => {
 //close ffmpeg connection
 realTimeRouter.get("/stop_ffmpeg_process/:id", (req, res) => {
   const { id } = req.params;
-
+  
   const ffmpegProcess = ffmpegPIDs.find((process) => process.camID === id);
 
   if (typeof ffmpegProcess === "object") {

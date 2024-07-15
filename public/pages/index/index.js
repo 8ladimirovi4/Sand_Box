@@ -30,7 +30,7 @@ const buildURL = (() => {
 
   REAL_TIME_LINK.addEventListener("click", (evt) => {
     if(!id){
-      alert("add cam No");
+      alert('add cam No and press "comfirm"');
       return
     } 
 
@@ -52,7 +52,7 @@ const buildURL = (() => {
     const endTime = evt.target["end_time"].value;
 
     if(!camNo || !startTime || !endTime){
-      MESSAGE_PLAYBACK.innerText = `field cam No, start time end time is empty`;
+      MESSAGE_PLAYBACK.innerText = `fields cam No, start time end time is empty`;
       MESSAGE_PLAYBACK.style.color = "red";
       return
     }
@@ -74,7 +74,7 @@ const buildURL = (() => {
 
   PLAYBACK_LINK.addEventListener("click", (evt) => {
     if(!id){
-      alert("add cam No, start time and end time");
+      alert('add cam No, start time and end time and press "comfirm" button');
       return
     } 
 
