@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>realtime</title>
+    <script src="thirdparty/hls.js"></script>
+</head>
+<body>
+    <video id="video" controls autoplay></video>
+    <script>
+const hls = new Hls();
+const url = new URL(location.href);
+const VIDEO = document.getElementById("video");
+
+hls.loadSource(
+  `${url.protocol}//${url.hostname}:${url.port}/ffmpeg/realtime/out.m3u8`
+);
+hls.attachMedia(VIDEO);
+hls.on(Hls.Events.MANIFEST_PARSED, function () {});
+
+    </script>
+</body>
+</html>

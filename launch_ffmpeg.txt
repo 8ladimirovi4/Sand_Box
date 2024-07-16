@@ -1,0 +1,11 @@
+
+Запуск realtime
+ffmpeg -rtsp_transport tcp -i "rtsp://admin:Aa11111!@192.168.11.111:554/Streaming/Channels/1702" -c:v libx264 -f hls -hls_time 2 -hls_list_size 1 -hls_flags delete_segments C:\Users\sea4836\Desktop\ffmpeg_node_js_manual_launch\public\ffmpeg\realtime\out.m3u8
+
+Запуск realtime
+ffmpeg -rtsp_transport tcp -i "rtsp://admin:Aa11111!@192.168.11.111:554/Streaming/tracks/1701/?starttime=20240715T090000Z;endtime=20240715T100000Z" -an -c:v copy -f hls -hls_time 2 -hls_list_size 3 "C:\Users\sea4836\Desktop\ffmpeg_node_js_manual_launch\public\ffmpeg\playback\out.m3u8
+
+Debug
+ffmpeg -rtsp_transport tcp -i "rtsp://admin:Aa11111!@192.168.11.111/Streaming/Channels/1702" -v debug -report -f null -
+
+
