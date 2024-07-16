@@ -3,7 +3,7 @@ const searchParams = new URLSearchParams(url.search);
 const id = searchParams.get("id");
 const camNo = searchParams.get("camNo");
 const VIDEO = document.getElementById("video");
-const TITLE = document.querySelector('.container_title')
+const TITLE = document.querySelector(".container_title");
 
 //звершить ffmpeg процесс
 window.addEventListener("beforeunload", async function (event) {
@@ -20,7 +20,7 @@ const checkFileAvailability = async () => {
       `${url.protocol}//${url.hostname}:${url.port}/real_time/check_file/${id}`
     );
     if (response.ok) {
-      TITLE.innerText =`Live Stream, cam_${camNo}`
+      TITLE.innerText = `Live Stream, cam_${camNo}`;
       loadVideo();
     } else {
       setTimeout(checkFileAvailability, 2000); // Повторить через 2 секунды

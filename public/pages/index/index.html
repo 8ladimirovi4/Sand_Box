@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HLS Stream</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <link rel="stylesheet" href="/pages/index/style.css" />
     <script type="text/javascript">
       var bundle = ["/common/help.js", "/pages/index/index.js"];
@@ -14,39 +13,37 @@
   <body>
     <h2>Hikvision Video Stream Tool</h2>
     <div class="container">
-     <div class="container_realtime-wrapper">
-      <h3>Real Time</h3>
-      <form class="container_realtime-wrapper_link-form" action="">
-        <input
-          name="cam-no"
-          class="cam-no"
-          type="number"
-          placeholder="cam No"
-          value="3"
-        />
-        <input
-          type="submit"
-          value="confirm"
-        />
-      </form>
-      <div class="container_realtime-wrapper_confirm">
-        <p class="container_realtime-wrapper_confirm_real-time-message">Put camera No and press the link below</p>
-      </div>
-      <a id="real-time" href="#">link real time</a>
+      <div class="container_realtime-wrapper">
+        <h3>Real Time</h3>
+        <form class="container_realtime-wrapper_link-form" action="">
+          <input
+            name="cam-no"
+            class="cam-no"
+            type="number"
+            placeholder="cam No"
+            value="3"
+          />
+          <input type="submit" value="confirm" />
+        </form>
+        <div class="container_realtime-wrapper_confirm">
+          <p class="container_realtime-wrapper_confirm_real-time-message">
+            Put camera No and press the link below
+          </p>
         </div>
+        <a id="real-time" href="#">link real time</a>
+      </div>
 
-
-        <div class="container_playback-wrapper">
-          <h3>Playback</h3>
-          <form class="container_playback-wrapper_link-form" action="">
-            <input
-              name="cam-no"
-              class="cam-no"
-              type="number"
-              placeholder="cam No"
-              value="17"
-            />
-            <input
+      <div class="container_playback-wrapper">
+        <h3>Playback</h3>
+        <form class="container_playback-wrapper_link-form" action="">
+          <input
+            name="cam-no"
+            class="cam-no"
+            type="number"
+            placeholder="cam No"
+            value="17"
+          />
+          <input
             name="start_time"
             class="container_playback-wrapper_link-form_time-range"
             type="text"
@@ -54,22 +51,21 @@
             value="20240715T090000Z"
           />
           <input
-          name="end_time"
-          class="container_playback-wrapper_link-form_time-range"
-          type="text"
-          placeholder="end time (format: 20240710T090000Z)"
-          value="20240715T100000Z"
-        />
-            <input
-              type="submit"
-              value="confirm"
-            />
-          </form>
-          <div class="container_playback-wrapper_confirm">
-            <p class="container_playback-wrapper_confirm_playback-message">Put camera No, start time, end time and press the link below</p>
-          </div>
-          <a id="playback" href="#">link playback</a>
-        </div>  
+            name="end_time"
+            class="container_playback-wrapper_link-form_time-range"
+            type="text"
+            placeholder="end time (format: 20240710T090000Z)"
+            value="20240715T100000Z"
+          />
+          <input type="submit" value="confirm" />
+        </form>
+        <div class="container_playback-wrapper_confirm">
+          <p class="container_playback-wrapper_confirm_playback-message">
+            Put camera No, start time, end time and press the link below
+          </p>
+        </div>
+        <a id="playback" href="#">link playback</a>
+      </div>
     </div>
   </body>
 </html>

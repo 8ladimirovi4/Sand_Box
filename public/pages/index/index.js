@@ -1,20 +1,28 @@
 const buildURL = (() => {
   const REAL_TIME_LINK = document.getElementById("real-time");
-  const REAL_TIME_LINK_FORM = document.querySelector(".container_realtime-wrapper_link-form");
-  const MESSAGE_REALTIME = document.querySelector(".container_realtime-wrapper_confirm_real-time-message");
-  const PLAYBACK_LINK = document.getElementById('playback')
-  const PLAYBACK_LINK_FORM = document.querySelector('.container_playback-wrapper_link-form')
-  const MESSAGE_PLAYBACK = document.querySelector('.container_playback-wrapper_confirm_playback-message')
+  const REAL_TIME_LINK_FORM = document.querySelector(
+    ".container_realtime-wrapper_link-form"
+  );
+  const MESSAGE_REALTIME = document.querySelector(
+    ".container_realtime-wrapper_confirm_real-time-message"
+  );
+  const PLAYBACK_LINK = document.getElementById("playback");
+  const PLAYBACK_LINK_FORM = document.querySelector(
+    ".container_playback-wrapper_link-form"
+  );
+  const MESSAGE_PLAYBACK = document.querySelector(
+    ".container_playback-wrapper_confirm_playback-message"
+  );
   let id = null;
 
   REAL_TIME_LINK_FORM.addEventListener("submit", (evt) => {
     evt.preventDefault();
     const camNo = evt.target["cam-no"].value;
- 
-    if(!camNo){
+
+    if (!camNo) {
       MESSAGE_REALTIME.innerText = `field cam No is empty`;
       MESSAGE_REALTIME.style.color = "red";
-      return
+      return;
     }
     id = GUID.newID();
     //query
@@ -29,20 +37,20 @@ const buildURL = (() => {
   });
 
   REAL_TIME_LINK.addEventListener("click", (evt) => {
-    if(!id){
+    if (!id) {
       alert('add cam No and press "comfirm"');
-      return
-    } 
+      return;
+    }
 
     REAL_TIME_LINK.target = "blank_" + id;
     MESSAGE_REALTIME.innerText = `Put camera No and press the link`;
     MESSAGE_REALTIME.style.color = "black";
 
     setTimeout(() => {
-      REAL_TIME_LINK.target = ""
-      REAL_TIME_LINK.href = '#'
-      id = null
-    },1000)
+      REAL_TIME_LINK.target = "";
+      REAL_TIME_LINK.href = "#";
+      id = null;
+    }, 1000);
   });
 
   PLAYBACK_LINK_FORM.addEventListener("submit", (evt) => {
@@ -51,14 +59,13 @@ const buildURL = (() => {
     const startTime = evt.target["start_time"].value;
     const endTime = evt.target["end_time"].value;
 
-    if(!camNo || !startTime || !endTime){
+    if (!camNo || !startTime || !endTime) {
       MESSAGE_PLAYBACK.innerText = `fields cam No, start time end time is empty`;
       MESSAGE_PLAYBACK.style.color = "red";
-      return
+      return;
     }
     //query
     id = GUID.newID();
-    
 
     MESSAGE_PLAYBACK.innerText = `Camera ${camNo} added succesfully, range ${startTime} - ${endTime}`;
     MESSAGE_PLAYBACK.style.color = "green";
@@ -67,26 +74,25 @@ const buildURL = (() => {
     //params
     //REAL_TIME_LINK.href = `/real_time/${evt.target['cam-no'].value}/${id}`
 
-    evt.target["cam-no"].value = ''
-    evt.target["start_time"].value = ''
-    evt.target["end_time"].value = ''
+    evt.target["cam-no"].value = "";
+    evt.target["start_time"].value = "";
+    evt.target["end_time"].value = "";
   });
 
   PLAYBACK_LINK.addEventListener("click", (evt) => {
-    if(!id){
+    if (!id) {
       alert('add cam No, start time and end time and press "comfirm" button');
-      return
-    } 
+      return;
+    }
 
     PLAYBACK_LINK.target = "blank_" + id;
     MESSAGE_PLAYBACK.innerText = `Put camera No, start time, end time and press the link`;
     MESSAGE_PLAYBACK.style.color = "black";
 
     setTimeout(() => {
-      REAL_TIME_LINK.target = ""
-      REAL_TIME_LINK.href = '#'
-      id = null
-    },1000)
+      REAL_TIME_LINK.target = "";
+      REAL_TIME_LINK.href = "#";
+      id = null;
+    }, 1000);
   });
-
 })();

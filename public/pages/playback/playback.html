@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>playback</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="/thirdparty/hls.js"></script>
     <link rel="stylesheet" href="/pages/playback/style.css" />
 
     <script type="text/javascript">
-        var bundle = ["/pages/playback/playback.js"];
-      </script>
-  
-      <script src="/common/main.js" defer></script>
-</head>
-<body>
-  <div class="container">
-    <h2 class="container_title">PlayBAck is Loading please wait for a while...</h2>
-  <video id="video" class="hidden" controls autoplay></video>
-</div>
-</body>
+      var bundle = ["/pages/playback/playback.js"];
+    </script>
+
+    <script src="/common/main.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <h2 class="container_title">
+        PlayBAck is Loading please wait for a while...
+      </h2>
+      <video id="video" class="hidden" controls autoplay></video>
+    </div>
+  </body>
 </html>
