@@ -6,7 +6,7 @@ const { spawn } = require("child_process");
 let ffmpeg = null;
 let ffmpegPIDs = [];
 
-const MEDIA_PATH = path.join(__dirname, `../ffmpeg/real_time_data/`);
+const MEDIA_PATH = path.join(__dirname, `../../ffmpeg/real_time_data/`);
 
 const createDirectory = async (dirPath) => {
   return new Promise((resolve, reject) => {
@@ -68,7 +68,7 @@ const getVideoContent = async (dirPath, camNo, id) => {
 //get HTML
 realTimeRouter.get("/", (req, res) => {
   res.sendFile(
-    path.join(__dirname, "../public/pages/real_time", "real_time.html")
+    path.join(__dirname, "../../public/pages/real_time", "real_time.html")
   );
 
   const cam = req.query.camNo;
@@ -83,20 +83,6 @@ realTimeRouter.get("/", (req, res) => {
   })(mediaLocation, cam, id);
 });
 
-//check manifest
-realTimeRouter.get("/check_file/:id", (req, res) => {
-  const { id } = req.params;
-  // HLS Manifest path
-  const filePath = MEDIA_PATH + id + "/out.m3u8";
-
-  fs.access(filePath, fs.constants.F_OK, (err) => {
-    if (err) {
-      res.status(404).send("File not found");
-    } else {
-      res.status(200).send("File found");
-    }
-  });
-});
 
 //close ffmpeg connection
 realTimeRouter.get("/stop_ffmpeg_process/:id", (req, res) => {

@@ -6,7 +6,7 @@ const { spawn } = require("child_process");
 let ffmpeg = null;
 let ffmpegPIDs = [];
 
-const MEDIA_PATH = path.join(__dirname, `../ffmpeg/playback_data/`);
+const MEDIA_PATH = path.join(__dirname, `../../ffmpeg/playback_data/`);
 
 const createDirectory = async (dirPath) => {
   return new Promise((resolve, reject) => {
@@ -68,7 +68,7 @@ const getVideoContent = async (dirPath, camNo, startPoint, endPoint, id) => {
 //get HTML
 playBackRouter.get("/", (req, res) => {
   res.sendFile(
-    path.join(__dirname, "../public/pages/playback", "playback.html")
+    path.join(__dirname, "../../public/pages/playback", "playback.html")
   );
 
   const cam = req.query.camNo;
@@ -83,21 +83,6 @@ playBackRouter.get("/", (req, res) => {
     await createDirectory(dirPath);
     await getVideoContent(dirPath, camNo, startPoint, endPoint, processID);
   })(mediaLocation, cam, startTime, endTime, id);
-});
-
-//check manifest
-playBackRouter.get("/check_file/:id", (req, res) => {
-  const { id } = req.params;
-  // HLS Manifest path
-  const filePath = MEDIA_PATH + id + "/out.m3u8";
-
-  fs.access(filePath, fs.constants.F_OK, (err) => {
-    if (err) {
-      res.status(404).send("File not found");
-    } else {
-      res.status(200).send("File found");
-    }
-  });
 });
 
 //close ffmpeg connection

@@ -14,24 +14,22 @@ window.addEventListener("beforeunload", async function (event) {
   }
 });
 
-const checkFileAvailability = async () => {
-  try {
-    const response = await fetch(
-      `${url.protocol}//${url.hostname}:${url.port}/real_time/check_file/${id}`
-    );
-    if (response.ok) {
-      TITLE.innerText = `Live Stream, cam_${camNo}`;
-      loadVideo();
-    } else {
-      setTimeout(checkFileAvailability, 2000); // Повторить через 2 секунды
-    }
-  } catch (error) {
-    console.error("Error checking file availability:", error);
-    setTimeout(checkFileAvailability, 2000); // Повторить через 2 секунды
+const isManifest = async() => {
+  try{
+   const res = await fetch(`${url.protocol}//${url.hostname}:${url.port}/real_time_data/${id}/out.m3u8`)
+   if(!res.ok){
+    throw new Error('no manifest')
+   }else{
+    TITLE.innerText = `Live Stream, cam_${camNo}`;
+    loadVideo();
+   }
+  }catch(err){
+    setTimeout(isManifest, 2000)
+    console.error("Error checking file availability:", err);
   }
-};
+}
 
-function loadVideo() {
+const loadVideo = async() => {
   if (Hls.isSupported()) {
     const hls = new Hls();
     hls.loadSource(
@@ -48,4 +46,5 @@ function loadVideo() {
     });
   }
 }
-checkFileAvailability();
+isManifest()
+
