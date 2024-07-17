@@ -1,4 +1,4 @@
-const realTimeRouter = require("express").Router();
+const playBackRouter = require("express").Router();
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
@@ -6,7 +6,7 @@ const { spawn } = require("child_process");
 let ffmpeg = null;
 let ffmpegPIDs = [];
 
-const MEDIA_PATH = path.join(__dirname, `../../ffmpeg/real_time_data/`);
+const MEDIA_PATH = path.join(__dirname, `../../ffmpeg/playback_data/`);
 
 const createDirectory = async (dirPath) => {
   return new Promise((resolve, reject) => {
@@ -31,18 +31,19 @@ const removeDirectory = (dirName) => {
     }
   });
 };
-
-//ffmpeg real_time config
-const getVideoContent = async (dirPath, camNo, id) => {
+const getVideoContent = async (dirPath, camNo, startPoint, endPoint, id) => {
   ffmpeg = spawn("ffmpeg", [
-    "-rtsp_transport", "tcp", "-i",
-    `rtsp://admin:Aa11111!@192.168.11.111/Streaming/Channels/${camNo}02`,
+    "-rtsp_transport",
+    "tcp",
+    "-i",
+    `rtsp://admin:Aa11111!@192.168.11.111:554/Streaming/tracks/${camNo}01/?starttime=${startPoint};endtime=${endPoint}`,
+    "-an",
     "-c:v",
-    "libx264",
-    "-f", "hls",
-    "-hls_time","2",
-    "-hls_list_size","1",
-    "-hls_flags","delete_segments",
+    "copy",
+    "-f",
+    "hls",
+    "-hls_time",
+    "2",
     path.join(dirPath, "out.m3u8"),
   ]);
 
@@ -63,31 +64,31 @@ const getVideoContent = async (dirPath, camNo, id) => {
     console.log(`child process exited with code ${code}`);
   });
 };
-
-//ROUTES (/real_time)'
+//ROUTES (/playback)'
 //get HTML
-realTimeRouter.get("/", (req, res) => {
+playBackRouter.get("/", (req, res) => {
   res.sendFile(
-    path.join(__dirname, "../../public/pages/real_time", "real_time.html")
+    path.join(__dirname, "../../public/pages/playback", "playback.html")
   );
 
   const cam = req.query.camNo;
   const id = req.query.id;
+  const startTime = req.query.startTime;
+  const endTime = req.query.endTime;
 
   // HLS dir path
   const mediaLocation = MEDIA_PATH + id;
 
-  // (async (dirPath, cam, processID) => {
-  //   await createDirectory(dirPath);
-  //   await getVideoContent(dirPath, cam, processID);
-  // })(mediaLocation, cam, id);
+  (async (dirPath, camNo, startPoint, endPoint, processID) => {
+    await createDirectory(dirPath);
+    await getVideoContent(dirPath, camNo, startPoint, endPoint, processID);
+  })(mediaLocation, cam, startTime, endTime, id);
 });
 
-
 //close ffmpeg connection
-realTimeRouter.get("/stop_ffmpeg_process/:id", (req, res) => {
+playBackRouter.get("/stop_ffmpeg_process/:id", (req, res) => {
   const { id } = req.params;
-  
+
   const ffmpegProcess = ffmpegPIDs.find((process) => process.camID === id);
 
   if (typeof ffmpegProcess === "object") {
@@ -112,4 +113,4 @@ realTimeRouter.get("/stop_ffmpeg_process/:id", (req, res) => {
   }
 });
 
-module.exports = realTimeRouter;
+module.exports = playBackRouter;

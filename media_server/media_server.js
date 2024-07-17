@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
 const config = require("./config/config");
+const realTimeRouter = require("./routes/realTimeRouter");
 
 
 const app = express();
@@ -16,7 +17,7 @@ const options = {
 
 app.use(cors());
 config(app);
-
+app.use("/real_time", realTimeRouter);
 
 const server = https.createServer(options, app);
 

@@ -65,29 +65,40 @@ const getVideoContent = async (dirPath, camNo, id) => {
 };
 
 //ROUTES (/real_time)'
-//get HTML
-realTimeRouter.get("/", (req, res) => {
-  res.sendFile(
-    path.join(__dirname, "../../public/pages/real_time", "real_time.html")
-  );
-
-  const cam = req.query.camNo;
-  const id = req.query.id;
+//launch ffmpeg
+realTimeRouter.get("/:id/:cam", (req, res) => {
+  const { cam } = req.params;
+  const { id } = req.params;
 
   // HLS dir path
   const mediaLocation = MEDIA_PATH + id;
 
-  // (async (dirPath, cam, processID) => {
-  //   await createDirectory(dirPath);
-  //   await getVideoContent(dirPath, cam, processID);
-  // })(mediaLocation, cam, id);
+  (async (dirPath, cam, processID) => {
+    await createDirectory(dirPath);
+    await getVideoContent(dirPath, cam, processID);
+  })(mediaLocation, cam, id);
+
 });
 
+
+realTimeRouter.post("/is_file_loaded", (req, res) => {
+    const { id } = req.body;
+ 
+      const filePath = MEDIA_PATH + id + "/out.m3u8"
+
+      fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+          res.status(404).send("File not found");
+        } else {
+          res.status(200).send("File found");
+        }
+      });
+})
 
 //close ffmpeg connection
 realTimeRouter.get("/stop_ffmpeg_process/:id", (req, res) => {
   const { id } = req.params;
-  
+
   const ffmpegProcess = ffmpegPIDs.find((process) => process.camID === id);
 
   if (typeof ffmpegProcess === "object") {
