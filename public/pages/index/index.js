@@ -17,6 +17,7 @@ const buildURL = (() => {
 
   REAL_TIME_LINK_FORM.addEventListener("submit", (evt) => {
     evt.preventDefault();
+    const clientIP = evt.target["client-ip"].value;
     const camNo = evt.target["cam-no"].value;
 
     if (!camNo) {
@@ -29,7 +30,7 @@ const buildURL = (() => {
     MESSAGE_REALTIME.innerText = `Camera ${camNo} added succesfully`;
     MESSAGE_REALTIME.style.color = "green";
     //query
-    REAL_TIME_LINK.href = `/real_time/?camNo=${camNo}&id=${id}`;
+    REAL_TIME_LINK.href = `/real_time/?camNo=${camNo}&id=${id}&clientIP=${clientIP}`;
     //params
     //REAL_TIME_LINK.href = `/real_time/${evt.target['cam-no'].value}/${id}`
 
@@ -55,6 +56,7 @@ const buildURL = (() => {
 
   PLAYBACK_LINK_FORM.addEventListener("submit", (evt) => {
     evt.preventDefault();
+    const clientIP = evt.target["client-ip"].value;
     const camNo = evt.target["cam-no"].value;
     const startTime = evt.target["start_time"].value;
     const endTime = evt.target["end_time"].value;
@@ -70,7 +72,7 @@ const buildURL = (() => {
     MESSAGE_PLAYBACK.innerText = `Camera ${camNo} added succesfully, range ${startTime} - ${endTime}`;
     MESSAGE_PLAYBACK.style.color = "green";
     //query
-    PLAYBACK_LINK.href = `/playback/?camNo=${camNo}&id=${id}&startTime=${startTime}&endTime=${endTime}`;
+    PLAYBACK_LINK.href = `/playback/?camNo=${camNo}&id=${id}&startTime=${startTime}&endTime=${endTime}&clientIP=${clientIP}`;
     //params
     //REAL_TIME_LINK.href = `/real_time/${evt.target['cam-no'].value}/${id}`
 

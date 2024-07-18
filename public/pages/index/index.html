@@ -15,7 +15,14 @@
     <div class="container">
       <div class="container_realtime-wrapper">
         <h3>Real Time</h3>
-        <form class="container_realtime-wrapper_link-form" action="">
+        <form class="container_realtime-wrapper_link-form link-form" action="">
+          <input
+            name="client-ip"
+            class="client-ip"
+            type="text"
+            placeholder="client ip (0.0.0.0)"
+            value="127.0.0.1"
+          />
           <input
             name="cam-no"
             class="cam-no"
@@ -23,7 +30,11 @@
             placeholder="cam No"
             value="3"
           />
-          <input type="submit" value="confirm" />
+          <input
+            type="submit"
+            value="confirm"
+            class="container_realtime-wrapper_link-form_confirm-btn confirm-btn"
+          />
         </form>
         <div class="container_realtime-wrapper_confirm">
           <p class="container_realtime-wrapper_confirm_real-time-message">
@@ -35,7 +46,14 @@
 
       <div class="container_playback-wrapper">
         <h3>Playback</h3>
-        <form class="container_playback-wrapper_link-form" action="">
+        <form class="container_playback-wrapper_link-form link-form" action="">
+          <input
+            name="client-ip"
+            class="client-ip"
+            type="text"
+            placeholder="client ip (0.0.0.0)"
+            value="127.0.0.1"
+          />
           <input
             name="cam-no"
             class="cam-no"
@@ -57,7 +75,11 @@
             placeholder="end time (format: 20240710T090000Z)"
             value="20240715T100000Z"
           />
-          <input type="submit" value="confirm" />
+          <input
+            type="submit"
+            value="confirm"
+            class="container_playback-wrapper_link-form_confirm-btn confirm-btn"
+          />
         </form>
         <div class="container_playback-wrapper_confirm">
           <p class="container_playback-wrapper_confirm_playback-message">

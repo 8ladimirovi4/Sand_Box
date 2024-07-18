@@ -1,6 +1,7 @@
 const url = new URL(location.href);
 const searchParams = new URLSearchParams(url.search);
-const id =  searchParams.get("id")
+const id = searchParams.get("id");
+const clientIP = searchParams.get("clientIP");
 const camNo = searchParams.get("camNo");
 const VIDEO = document.getElementById("video");
 const TITLE = document.querySelector(".container_title");
@@ -8,61 +9,59 @@ const TITLE = document.querySelector(".container_title");
 //звершить ffmpeg процесс
 window.addEventListener("beforeunload", async function (event) {
   try {
-    await fetch(`https://localhost:3001/real_time/stop_ffmpeg_process`,{
-      method: 'POST',
+    await fetch(`https://${clientIP}:3001/real_time/stop_ffmpeg_process`, {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: id })
-    })
+      body: JSON.stringify({ id: id }),
+    });
   } catch (error) {
     console.error("Error stopping ffmpeg process:", error);
   }
 });
 
 //start ffmpeg convertation
-fetch(`https://localhost:3001/real_time/${id}/${camNo}`)
+fetch(`https://${clientIP}:3001/real_time/${id}/${camNo}`);
 
-
-const isManifestExist = async() => {
-  try{
-   const res = await fetch(`https://localhost:3001/real_time/is_file_loaded`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ id: id })
+const isManifestExist = async () => {
+  try {
+    const res = await fetch(
+      `https://${clientIP}:3001/real_time/is_file_loaded`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: id }),
+      }
+    );
+    if (!res.ok) {
+      throw new Error("no manifest");
+    } else {
+      TITLE.innerText = `Live Stream, cam_${camNo}`;
+      loadVideo();
     }
-   )
-   if(!res.ok){
-    throw new Error('no manifest')
-   }else{
-    TITLE.innerText = `Live Stream, cam_${camNo}`;
-    loadVideo();
-   }
-  }catch(err){
-    setTimeout(isManifestExist, 2000)
+  } catch (err) {
+    setTimeout(isManifestExist, 2000);
     console.error("Error checking file availability:", err);
   }
-}
+};
 
-const loadVideo = async() => {
+const loadVideo = async () => {
   if (Hls.isSupported()) {
     const hls = new Hls();
-    hls.loadSource(
-      `https://localhost:3001/real_time_data/${id}/out.m3u8`
-    );
+    hls.loadSource(`https://${clientIP}:3001/real_time_data/${id}/out.m3u8`);
     hls.attachMedia(VIDEO);
     hls.on(Hls.Events.MANIFEST_PARSED, function () {});
   } else if (VIDEO.canPlayType("application/vnd.apple.mpegurl")) {
-    VIDEO.src = `https://localhost:3001/real_time_data/${id}/out.m3u8`;
+    VIDEO.src = `https://${clientIP}:3001/real_time_data/${id}/out.m3u8`;
     VIDEO.addEventListener("canplay", function () {
       VIDEO.play().catch((error) => {
         console.error("Error playing video:", error);
       });
     });
   }
-}
+};
 
-isManifestExist()
-
+isManifestExist();
