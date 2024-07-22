@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>real time</title>
+    <script src="/thirdparty/hls.js"></script>
+    <link rel="stylesheet" href="/pages/real_time/style.css" />
+
+    <script type="text/javascript">
+      var bundle = ["/pages/real_time/real_time.js"];
+    </script>
+
+    <script src="/common/main.js" defer></script>
+  </head>
+  <body>
+    <div class="container">
+      <h2 class="container_title">
+        Live Stream is Loading please wait for a while...
+      </h2>
+     
+        <fieldset>
+          <legend>Dementions</legend>
+          <div>
+            <input type="radio" id="contactChoice1" name="contact" value="640x480"  checked/>
+            <label for="contactChoice1">640x480</label>
+            <input type="radio" id="contactChoice2" name="contact" value="800x600" />
+            <label for="contactChoice2">800x600</label>
+            <input type="radio" id="contactChoice3" name="contact" value="1024x768" />
+            <label for="contactChoice3">1024x768</label>
+          </div>
+        </fieldset>
+
+      
+      <video id="video" style="width: 640px; height: 480px"class="hidden" controls autoplay></video>
+    </div>
+  </body>
+</html>

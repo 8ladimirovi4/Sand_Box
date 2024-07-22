@@ -1,0 +1,26 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  margin: 20px;
+  gap: 10px;
+}
+.container_link-form {
+  display: flex;
+  gap: 5px;
+}
+#video {
+  width: fit-content;
+  height: fit-content;
+}
+p,
+label {
+  font:
+    1rem 'Fira Sans',
+    sans-serif;
+}
+input {
+  margin: 0.4rem;
+}
+fieldset{
+  width: 300px;
+}
