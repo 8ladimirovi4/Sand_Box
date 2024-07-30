@@ -1,9 +1,11 @@
+const React = require("react");
+const ReactDOMServer = require("react-dom/server");
+
 const mainRouter = require("express").Router();
-const Layout = require("../views/src/Layout");
+const Home = require("../views/src/Home");
 
 mainRouter.get("/", (req, res) => {
-
-  res.renderComponent(Layout, {});
+     res.renderComponent(Home, {});
 });
 
 module.exports = mainRouter;

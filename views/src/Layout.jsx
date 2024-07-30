@@ -1,5 +1,6 @@
 const React = require("react");
-module.exports = function Layout({ children, user }) {
+
+module.exports = function Layout({ children }) {
 
   return (
     <html lang="en">
@@ -8,14 +9,20 @@ module.exports = function Layout({ children, user }) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         
-        <script defer src="/js/aplication.js" />
-        <link rel="stylesheet" href="css/css.css"/>
+        <script defer src="aplication.js" />
+        <link rel="stylesheet" href="style.css"/>
 
 
         <title>React ssr</title>
       </head>
       <body>
-       <h1>Layout</h1>
+        <div class="app-wrapper">
+       <header></header>
+       <main>
+       {children}
+       </main>
+       <footer></footer>
+       </div>
       </body>
     </html>
   );
