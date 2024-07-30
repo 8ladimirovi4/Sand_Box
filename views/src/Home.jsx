@@ -1,12 +1,22 @@
 const React = require("react");
 const Layout = require('./Layout')
-import axios from 'axios';
-import { saveAs } from 'file-saver';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Button } from 'primereact/button';
+
+
 
 module.exports = function Home() {
+  const data = [
+    { id: 1, name: 'file.txt' },
+    // Дополнительные данные...
+];
+
+const actionBodyTemplate = () => {
+    return (
+        <button className="download-btn" label="Download" icon="pi pi-download" >Download</button>
+    );
+};
+
   return (
     <>
     <Layout>
