@@ -18,7 +18,7 @@ module.exports = function Layout({ children }) {
         <title>React ssr</title>
       </head>
       <body>
-        <div class="app-wrapper">
+        <div className="app-wrapper">
        <header></header>
        <main>
        {children}

@@ -1,9 +1,9 @@
-const DOWNLOAD_BTN = document.querySelector('.download-btn')
+const DOWNLOAD_BTNS = document.querySelectorAll('.download-btn')
 
 const data = 'file.txt'
 
 const downloadFile = (data) => {
-  if (!data ) return;
+  if (!data) return;
   const linkUrl = `http://localhost:3000/downloads?file=${encodeURIComponent(data)}`;
 
   axios({
@@ -18,4 +18,10 @@ const downloadFile = (data) => {
   });
 };
 
-DOWNLOAD_BTN.addEventListener('click', (evt) => downloadFile(data))
+DOWNLOAD_BTNS.forEach(DOWNLOAD_BTN => {
+    DOWNLOAD_BTN.addEventListener('click', (evt) =>{
+        const rowData = evt.target.getAttribute('row_data')
+        const parseData = JSON.parse(rowData)
+        downloadFile(parseData.name)
+    }) 
+})

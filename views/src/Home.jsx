@@ -7,13 +7,15 @@ import { Column } from 'primereact/column';
 
 module.exports = function Home() {
   const data = [
-    { id: 1, name: 'file.txt' },
+    { id: 1, name: 'file1.txt' },
+    { id: 2, name: 'file2.txt' },
     // Дополнительные данные...
 ];
 
-const actionBodyTemplate = () => {
+const actionBodyTemplate = (rowData) => {
+  const serializeData = JSON.stringify(rowData)
     return (
-        <button className="download-btn" label="Download" icon="pi pi-download" >Download</button>
+        <button className="download-btn" row_data={serializeData} label="Download" icon="pi pi-download" >Download</button>
     );
 };
 
