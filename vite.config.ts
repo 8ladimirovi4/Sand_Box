@@ -9,6 +9,8 @@ export default defineConfig({
     alias: {
       'assets': path.resolve(__dirname, 'src/assets'),
       'components': path.resolve(__dirname, 'src/components'),
+      'homeworks': path.resolve(__dirname, 'src/homeworks'),
+      'lessons': path.resolve(__dirname, 'src/lessons'),
       'pages': path.resolve(__dirname, 'src/pages'),
       'store': path.resolve(__dirname, 'src/store'),
       'styles': path.resolve(__dirname, 'src/styles')
@@ -16,13 +18,6 @@ export default defineConfig({
   },
   server: {
     open: true,
-    proxy: {
-      '/api': {
-        target: 'https://localhost:7161',
-        secure: false
-      }
-    },
-    port: 80,
   },
   test: {
     globals: true,

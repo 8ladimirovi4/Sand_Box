@@ -26,11 +26,10 @@ export interface Form {
 }
 
 export interface FormAction {
-  //id: string,
-  [key: string]:string; 
+  [key: string]:any; 
 }
 
-export interface TablelateState {
+export interface TableState {
   selected:any,
   data: Table[];
   isLoading: boolean;
@@ -38,11 +37,10 @@ export interface TablelateState {
 }
 
 export interface Table {
-  id: number,
+  id: any,
   [key: string]: any; 
 }
 
 export interface TableAction {
-  //id: string,
-  [key: string]:string; 
+[key: string]:any; 
 }

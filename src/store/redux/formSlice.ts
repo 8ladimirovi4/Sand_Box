@@ -1,6 +1,6 @@
 // formSlice.js
 import { createAppSlice } from 'store/createAppSlice';
-import { FormState } from './types';
+import { FormState } from 'store/redux/types';
 
 const formInitialState: FormState = {
     data: {
@@ -12,12 +12,13 @@ const formInitialState: FormState = {
     error: undefined,
   };
 
-
   export const formSlice = createAppSlice({
     name: 'FORM',
     initialState: formInitialState,
  
-  
+    reducers: (create) => ({
+     
+     }),
     selectors: {
       formValues: (state: FormState) => state
     },

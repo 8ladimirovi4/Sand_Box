@@ -1,9 +1,9 @@
 // formSlice.js
 import { PayloadAction } from '@reduxjs/toolkit';
 import { createAppSlice } from 'store/createAppSlice';
-import { FormAction, TablelateState } from './types';
+import { FormAction, TableState } from 'store/redux/types';
 
-const tableInitialState: TablelateState = {
+const tableInitialState: TableState = {
     selected:1,
     data:[
       { id:1, name:"Alex Brown", email:"", age:25 },
@@ -19,21 +19,22 @@ const tableInitialState: TablelateState = {
     name: 'DATA_TABLE',
     initialState: tableInitialState,
  
-    reducers: (create: any) => ({
-        setSelectedRow: create.reducer((state: TablelateState, action: PayloadAction<number>) => {
+    reducers: (create) => ({
+        setSelectedRow: create.reducer((state: TableState, action: PayloadAction<number>) => {
           state.selected = action.payload
-
+return state
        }),
-       setUserInfo: create.reducer((state: TablelateState, action: PayloadAction<FormAction>) => {
-        console.log('===> state.selected', state.selected)
+       setUserInfo: create.reducer((state: TableState, action: PayloadAction<FormAction>) => {
+        console.log(action.payload)
         state.data.
         filter(row => row.id === state.selected).
         map(row => {row.name = action.payload.name, row.email = action.payload.email, row.age = action.payload.age})
+        return
      }),
     }),
 
     selectors: {
-      tablesValues: (state: TablelateState) => state
+      tablesValues: (state: TableState) => state
     },
   });
   export const tableSliceActions = tableSlice.actions;

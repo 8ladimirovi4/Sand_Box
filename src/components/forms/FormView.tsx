@@ -3,7 +3,7 @@ import { formSliceSelectors } from 'store/redux/formSlice';
 import { tableSliceActions } from 'store/redux/tableSlice';
 import Webix from 'components/Webix';
 import type { FormValues, FormView } from './types';
-import TableView from '../tables/TableView';
+import TableView from 'components/tables/TableView';
 
 function getForm(save: (value: FormValues) => void): FormView {
 
