@@ -1,1 +1,1 @@
-export { default as mtLogo } from './mt.jpg';
+export { default as mtLogo } from './mt.png';

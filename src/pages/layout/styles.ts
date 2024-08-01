@@ -1,38 +1,76 @@
-import styled from '@emotion/styled';
+import styled from "@emotion/styled";
+import { NavLink, Link } from "react-router-dom";
+import { colors } from "styles/colors";
+import { mtLogo } from "../../assets";
 
-export const PageWrapper = styled.div`
+export const LayoutWrapper = styled.div`
   display: flex;
+  flex-direction: column;
   flex: 1;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
 `;
 
-export const Wnd = styled.div`
-width: 100%;
-height: 300px;
-display: flex;
-align-items: center;
-flex-direction: column;
-`;
-
-export const BtnGetText = styled.div<{ isLoading: boolean }>`
+export const Header = styled.header`
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  background-color: ${({ isLoading }) =>
-    isLoading ? 'lightgray' : 'lightblue'};
-  border: 2px solid rgb(31, 171, 218);
-  width: 150px;
-  height: 50px;
-  border-radius: 15px;
-  font-size: x-large;
-  border-color: ${({ isLoading }) =>
-    isLoading ? 'lightgray' : 'rgb(31, 171, 218)'};
-  cursor: ${({ isLoading }) => (isLoading ? 'wait' : 'pointer')};
+  padding: 20px;
+  width: 100%;
+  height: fit-content;
+  background-color: ${colors.primary};
+  color: white;
+`;
 
-  &:hover{
-    background-color: ${({ isLoading }) =>
-    isLoading ? 'lightgray' : 'rgb(31, 171, 218)'};
-  }
+export const HeaderLogoContainer = styled.div`
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+`;
+
+export const HeaderLogo = styled.img`
+  width: 100%;
+  height: 100%;
+`;
+
+HeaderLogo.defaultProps = { src: mtLogo};
+
+export const NavContainer = styled.nav`
+  display: flex;
+  gap: 20px;
+`;
+
+export const Main = styled.main`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 20px;
+`;
+
+export const Footer = styled.footer`
+  display: flex;
+  padding: 30px 70px;
+  width: 100%;
+  height: fit-content;
+  justify-content: space-between;
+  background-color: ${colors.primary};
+  color: white;
+`;
+
+export const FooterNavContainer = styled.nav`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+`;
+
+export const StyledNavLink = styled(NavLink)`
+  text-decoration: none;
+  font-size: 30px;
+  font-weight: bold;
+  color: white;
+`;
+
+export const StyledLink = styled(Link)`
+  text-decoration: none;
+  font-size: 16px;
+  color: white;
 `;
