@@ -1,46 +1,59 @@
 
 
+  // Получаем таблицу HTML
+  const table = $('#excel_table')
 
-function excelToObjects(stringData){
-    var stringData = document.querySelector('#excel_data').value
-    $('div').html( 
-        '<table><tr><td>' + 
-        stringData.replace(/\n+$/i, '').replace(/\n/g, '</tr><tr><td>').replace(/\t/g, '</td><td>') + 
-        '</tr></table>'
-    )
-}
+  // Модальное окно
+  const modal = $('#modal').get(0)
+  const span = $('.close');
 
-   
+  // Обработчик клика по таблице
+  table.on('click', function() {
+      // Извлекаем данные из HTML таблицы
 
-function removeExtraTabs(string) {
-    return string.replace(new RegExp("\t\t", 'g'), "\t");
-  }
-  
-  function generateTable() {
-    var data = removeExtraTabs($('#pastein').val());
-    var rows = data.split("\n");
-    var table = $('<table />');
-  
-    for (var y in rows) {
-      var cells = rows[y].split("\t");
-      var row = $('<tr />');
-      for (var x in cells) {
-        row.append('<td>' + cells[x] + '</td>');
-      }
-      table.append(row);
+      const rows = Array.from(table.get(0).rows);
+      const data = rows.map(row => {
+          return Array.from(row.cells).map(cell => cell.textContent);
+      });
+
+      // Открываем модальное окно
+      modal.style.display = "block";
+
+    $('#spreadsheet').jexcel({ data: data, colWidths: [ 50, 100, 100, 100 ] })
+  });
+
+  // Закрываем модальное окно при клике на крестик
+  span.on('click', function() {
+    modal.style.display = "none";
+    // Удаляем содержимое jExcel чтобы избежать повторного инициализирования при следующем открытии
+    $('#spreadsheet').html('')
+})
+
+  // Закрываем модальное окно при клике вне его
+  $(window).on('click', function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+        $('#spreadsheet').html('')
     }
-  
-    // Insert into DOM
-    $('#excel_table').html(table);
-  }
+})
 
+// Обработчик клика по кнопке "Сохранить данные"
+$('#saveButton').on('click', function() {
+    // Получаем данные из jExcel
+    const data = $('#spreadsheet').jexcel('getData');
+    // Очистка существующей таблицы HTML
+    table.find('tr').remove();
 
-  data = [
-    ['Google', 1998, 807.80],
-    ['Apple', 1976, 116.52],
-    ['Yahoo', 1994, 38.66],
-];
+    // Перезаписываем данные в HTML таблицу
+    data.forEach(row => {
+        const rowHtml = `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+        console.log('===>rowHtml',rowHtml)
+        table.append(rowHtml);
+    });
 
-$('#mytable').jexcel({ data:data, colWidths: [ 300, 80, 100 ] });
-  
+    // Закрываем модальное окно
+    modal.style.display = "none";
+    $('#spreadsheet').html('');
+});
+
 
