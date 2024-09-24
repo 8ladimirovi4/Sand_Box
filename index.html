@@ -3,37 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jexcel/1.5.7/js/jquery.jexcel.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jexcel/1.5.7/css/jquery.jexcel.css" type="text/css" />
-    
-    <link rel="stylesheet" href="./style.css">
-    <title>Document</title>
-    <script src="./index.js" defer></script>
+    <title>Контекстное меню</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        td {
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* Стили для контекстного меню */
+        #contextMenu {
+            display: none;
+            position: absolute;
+            z-index: 1000;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            width: 150px;
+        }
+
+        #contextMenu ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        #contextMenu li {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        #contextMenu li:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
 </head>
-
 <body>
-   <h1>KEK</h1>
-   <!-- <p>Paste excel data here:</p>  
-   <textarea id="excel_data" name="excel_data" style="width:250px;height:150px;"></textarea><br>
-   <br><br>
-       <p>Table data will appear below</p>
-   <hr>
-   <div id="excel_table"></div> -->
 
-  
+<h2>Таблица с контекстным меню</h2>
+<table id="myTable">
+    <tr>
+        <td>Ячейка 1</td>
+        <td>Ячейка 2</td>
+        <td>Ячейка 3</td>
+    </tr>
+    <tr>
+        <td>Ячейка 4</td>
+        <td>Ячейка 5</td>
+        <td>Ячейка 6</td>
+    </tr>
+</table>
 
-<p>Paste excel data here:</p>
-<textarea id="pastein" name="excel_data" style="width:250px;height:150px;"></textarea><br>
-<button onclick=generateTable()>Get data</button>
-<!-- <input type="button" onclick="javascript:generateTable()" value="Genereate Table"/> -->
-<br><br>
-<p>Table data will appear below</p>
-<hr>
-<div id="excel_table"></div>
+<!-- Контекстное меню -->
+<div id="contextMenu">
+    <ul>
+        <li id="paste">Вставить из буфера обмена</li>
+    </ul>
+</div>
 
-<div id="mytable"></div>
-<table><tr><td>1</td><td>Иван</td><td>Иванов</td><td>Пупкин</td></tr><tr><td>2</td><td>Иван</td><td>Пупкин</td></tr><tr><td>3</td><td>Иванов</td><td>Пупкин</td><td></td></tr><tr><td>4</td><td>Иван</td><td>Иванов</td><td>Пупкин</td></tr><tr><td>5</td><td>Иван</td><td>Иванов</td><td>Пупкин</td></tr></table>
+<script>
+    const table = document.getElementById('myTable');
+    const contextMenu = document.getElementById('contextMenu');
+    let selectedCell = null;
+
+    // Показать контекстное меню
+    table.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        
+        // Получаем выбранную ячейку
+        selectedCell = e.target;
+        
+        // Позиционирование контекстного меню
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = `${e.pageX}px`;
+        contextMenu.style.top = `${e.pageY}px`;
+    });
+
+    // Скрыть контекстное меню при клике вне его
+    document.addEventListener('click', function() {
+        contextMenu.style.display = 'none';
+    });
+
+    // Вставить данные из буфера обмена в выбранную ячейку
+    document.getElementById('paste').addEventListener('click', async function() {
+        try {
+            // Получаем текст из буфера обмена
+            const text = await navigator.clipboard.readText();
+            
+            // Вставляем текст в выбранную ячейку
+            if (selectedCell) {
+                selectedCell.textContent = text;
+            }
+
+            // Скрываем контекстное меню
+            contextMenu.style.display = 'none';
+        } catch (err) {
+            console.error('Ошибка при вставке данных из буфера обмена: ', err);
+        }
+    });
+</script>
+
 </body>
 </html>
