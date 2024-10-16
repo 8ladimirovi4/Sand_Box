@@ -1,39 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jexcel/1.5.7/js/jquery.jexcel.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jexcel/1.5.7/css/jquery.jexcel.css" type="text/css" />
-    
-    <link rel="stylesheet" href="./style.css">
-    <title>Document</title>
-    <script src="./index.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webix Example with Callback</title>
+  <script src="https://cdn.webix.com/edge/webix.js"></script>
+  <link rel="stylesheet" href="https://cdn.webix.com/edge/webix.css">
 </head>
-
 <body>
-   <h1>KEK</h1>
-   <!-- <p>Paste excel data here:</p>  
-   <textarea id="excel_data" name="excel_data" style="width:250px;height:150px;"></textarea><br>
-   <br><br>
-       <p>Table data will appear below</p>
-   <hr>
-   <div id="excel_table"></div> -->
 
-  
+<script>
+  // Определяем функцию buildPageLayout
+  this.buildPageLayout = function (complete) {
+    // Создаем компонент Webix — шаблон
+    let content = webix.ui({
+      view: 'template',   // Это компонент-шаблон
+      id: 'mainTemplate', // Присваиваем id, чтобы легче было работать с элементом
+      template: "<div>Это начальный контент</div>", // Изначальное содержимое шаблона
+      autoheight: true,
+      borderless: true
+    });
 
-<p>Paste excel data here:</p>
-<textarea id="pastein" name="excel_data" style="width:250px;height:150px;"></textarea><br>
-<button onclick=generateTable()>Get data</button>
-<!-- <input type="button" onclick="javascript:generateTable()" value="Genereate Table"/> -->
-<br><br>
-<p>Table data will appear below</p>
-<hr>
-<div id="excel_table"></div>
+    // Если передана функция complete, вызываем её и передаем объект content
+    if (complete) complete(content);
+  };
 
-<div id="mytable"></div>
-<table><tr><td>1</td><td>Иван</td><td>Иванов</td><td>Пупкин</td></tr><tr><td>2</td><td>Иван</td><td>Пупкин</td></tr><tr><td>3</td><td>Иванов</td><td>Пупкин</td><td></td></tr><tr><td>4</td><td>Иван</td><td>Иванов</td><td>Пупкин</td></tr><tr><td>5</td><td>Иван</td><td>Иванов</td><td>Пупкин</td></tr></table>
+  // Вызовем функцию buildPageLayout и передадим в нее callback (функцию complete)
+  this.buildPageLayout(function(content) {
+    // Здесь мы в callback будем изменять содержимое шаблона
+
+    // Меняем содержимое шаблона через метод setHTML
+    content.setHTML("<div><b>Контент изменен!</b><br>Нажмите кнопку ниже:</div>");
+
+    // Добавляем кнопку под шаблоном
+    webix.ui({
+      view: "button",
+      value: "Нажми меня",
+      width: 150,
+      click: function() {
+        // При клике на кнопку меняем контент снова
+        content.setHTML("<div><b>Контент был снова изменен после клика!</b></div>");
+      }
+    }, $$('mainTemplate').$view.parentNode); // Добавляем кнопку под элементом шаблона
+  });
+</script>
+
 </body>
 </html>
