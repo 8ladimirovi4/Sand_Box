@@ -1,46 +1,58 @@
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const app = express();
+const morgan = require('morgan');
+
+// Порт, на котором будет работать сервер
+const PORT = 3000;
+app.use(morgan('combined')); // 'combined' выводит детальные логи, можно использовать 'dev' для более кратких логов
+// Папка, где хранятся файлы для скачивания
+const FILES_DIR = path.join(__dirname, 'download');
+
+// Обслуживаем статические файлы (включая HTML-файл клиента)
+app.use(express.static(path.join(__dirname, 'public')));
 
 
+// Маршрут для рендеринга HTML страницы
+app.get('/', (req, res) => {
+    // Отправляем HTML-файл, который будет содержать кнопку для скачивания
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-function excelToObjects(stringData){
-    var stringData = document.querySelector('#excel_data').value
-    $('div').html( 
-        '<table><tr><td>' + 
-        stringData.replace(/\n+$/i, '').replace(/\n/g, '</tr><tr><td>').replace(/\t/g, '</td><td>') + 
-        '</tr></table>'
-    )
-}
-
-   
-
-function removeExtraTabs(string) {
-    return string.replace(new RegExp("\t\t", 'g'), "\t");
+// Эндпоинт для скачивания файла
+app.get('/download', (req, res) => {
+  const fileName = req.query.file;
+console.log('===>fileName',fileName)
+  if (!fileName) {
+    return res.status(400).send('File name is required');
   }
-  
-  function generateTable() {
-    var data = removeExtraTabs($('#pastein').val());
-    var rows = data.split("\n");
-    var table = $('<table />');
-  
-    for (var y in rows) {
-      var cells = rows[y].split("\t");
-      var row = $('<tr />');
-      for (var x in cells) {
-        row.append('<td>' + cells[x] + '</td>');
-      }
-      table.append(row);
+
+  const filePath = path.join(FILES_DIR, fileName);
+console.log('===>filePath',filePath)
+  // Проверяем, существует ли файл
+  fs.stat(filePath, (err, stats) => {
+    if (err || !stats.isFile()) {
+      return res.status(404).send('File not found');
     }
-  
-    // Insert into DOM
-    $('#excel_table').html(table);
-  }
 
+    // Устанавливаем заголовки для скачивания
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    
+    // Используем поток для передачи файла
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
 
-  data = [
-    ['Google', 1998, 807.80],
-    ['Apple', 1976, 116.52],
-    ['Yahoo', 1994, 38.66],
-];
+    // Обработчик ошибок
+    fileStream.on('error', (error) => {
+      console.error('Error reading file:', error);
+      res.status(500).send('Internal server error');
+    });
+  });
+});
 
-$('#mytable').jexcel({ data:data, colWidths: [ 300, 80, 100 ] });
-  
-
+// Запускаем сервер
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
