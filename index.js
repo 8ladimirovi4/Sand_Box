@@ -13,12 +13,17 @@ const FILES_DIR = path.join(__dirname, 'download');
 // Обслуживаем статические файлы (включая HTML-файл клиента)
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Обрабатываем все неизвестные маршруты, возвращая `index.html`
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Маршрут для рендеринга HTML страницы
 app.get('/', (req, res) => {
     // Отправляем HTML-файл, который будет содержать кнопку для скачивания
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
 
 // Эндпоинт для скачивания файла
 app.get('/download', (req, res) => {
