@@ -1,39 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jexcel/1.5.7/js/jquery.jexcel.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jexcel/1.5.7/css/jquery.jexcel.css" type="text/css" />
-    
-    <link rel="stylesheet" href="./style.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/jexcel/1.5.7/css/jquery.jexcel.css"
+      type="text/css"
+    />
+
+    <link rel="stylesheet" href="./style.css" />
     <title>Document</title>
+    <script src="./classes.js"></script>
     <script src="./index.js" defer></script>
-</head>
+    <script src="./dom.js" defer></script>
+  </head>
 
-<body>
-   <h1>KEK</h1>
-   <!-- <p>Paste excel data here:</p>  
-   <textarea id="excel_data" name="excel_data" style="width:250px;height:150px;"></textarea><br>
-   <br><br>
-       <p>Table data will appear below</p>
-   <hr>
-   <div id="excel_table"></div> -->
+  <body>
+    <form id="myForm">
+      <p>Please select an animal:</p>
+      <div>
+        <input type="radio" id="1" name="animal" value="cat" />
+        <label for="cat">Cat</label>
 
-  
-
-<p>Paste excel data here:</p>
-<textarea id="pastein" name="excel_data" style="width:250px;height:150px;"></textarea><br>
-<button onclick=generateTable()>Get data</button>
-<!-- <input type="button" onclick="javascript:generateTable()" value="Genereate Table"/> -->
-<br><br>
-<p>Table data will appear below</p>
-<hr>
-<div id="excel_table"></div>
-
-<div id="mytable"></div>
-<table><tr><td>1</td><td>Иван</td><td>Иванов</td><td>Пупкин</td></tr><tr><td>2</td><td>Иван</td><td>Пупкин</td></tr><tr><td>3</td><td>Иванов</td><td>Пупкин</td><td></td></tr><tr><td>4</td><td>Иван</td><td>Иванов</td><td>Пупкин</td></tr><tr><td>5</td><td>Иван</td><td>Иванов</td><td>Пупкин</td></tr></table>
-</body>
+        <input type="radio" id="2" name="animal" value="dog" />
+        <label for="dog">Dog</label>
+      </div>
+      <div>
+        <button type="submit">Submit</button>
+      </div>
+    </form>
+    <h1 id="animalVoice"></h1>
+  </body>
 </html>
