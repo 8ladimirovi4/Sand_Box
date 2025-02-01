@@ -1,0 +1,41 @@
+body,
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'OpenSans-Regular', sans-serif;
+  color: #65655f;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+}
+
+h1 {
+  font-family: 'OpenSans-Bold', sans-serif;
+  color: #65655f;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'OpenSans-Bold', sans-serif;
+  color: #65655f;
+}
