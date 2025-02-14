@@ -1,0 +1,9 @@
+.user-list-wrapper_user {
+    display: flex;
+    width: 300px;
+    flex-direction: column;
+    padding: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  

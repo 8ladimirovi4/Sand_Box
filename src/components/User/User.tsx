@@ -1,4 +1,5 @@
 import { UserInfoProps } from "./types";
+import './styles.css'
 
 const User = ({ userInfo }: UserInfoProps) => {
   return (

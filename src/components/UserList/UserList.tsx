@@ -27,8 +27,8 @@ const UserList = () => {
         setLoading(false);
       }
     };
-    
-     //предотвращает повторную загрузку данных при каждом рендере компонента.
+
+    //предотвращает повторную загрузку данных при каждом рендере компонента.
     if (users.length === 0) {
       fetchUsers();
     }
@@ -38,6 +38,7 @@ const UserList = () => {
   const cachedUsers = useMemo(() => users, [users]);
 
   // Функция выбора пользователя
+  // Функци не будет пересоздаваться при последующих рендерах.
   const handleSelectUser = useCallback((user: UserType) => {
     setSelectedUser(user);
   }, []);
@@ -45,21 +46,27 @@ const UserList = () => {
   return (
     <div className="user-list-wrapper">
       <div className="user-list-wrapper_users-wrapper">
-        <h2>Пользователи</h2>
         {loading && <p>Загрузка...</p>}
         {error && <p style={{ color: "red" }}>{error}</p>}
-        <ul>
-          {cachedUsers.map((user) => (
-            <li className="user-list-wrapper_users" key={user.id}>
-              <div>{user.name}</div>
-              <div>
-                <CommonButton onClick={() => handleSelectUser(user)}>
-                  Подробнее
-                </CommonButton>
-              </div>
-            </li>
-          ))}
-        </ul>
+        {cachedUsers && cachedUsers.length ? (
+          <>
+            <h2>Пользователи</h2>
+            <ul>
+              {cachedUsers.map((user) => (
+                <li className="user-list-wrapper_users" key={user.id}>
+                  <div>{user.name}</div>
+                  <div>
+                    <CommonButton onClick={() => handleSelectUser(user)}>
+                      Подробнее
+                    </CommonButton>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <div className="user-list-wrapper_users"></div>
+        )}
       </div>
       <User userInfo={selectedUser} />
     </div>
