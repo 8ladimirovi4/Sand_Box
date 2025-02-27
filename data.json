@@ -1,0 +1,31 @@
+{
+    "data": [
+        {
+            "id": "70ae0685-f9c8-4c27-acfa-c5f5ccc8bc4",
+            "type": "SWITCH",
+            "ver": "3.0",
+            "name": "Выключатель",
+            "icon": "switch.png",
+            "desc": "Выключатель",
+            "files": {
+                "mid": "00000000-0000-0000-0000-000000000000",
+                "sid": "00000000-0000-0000-0000-000000000000",
+                "jrn": false,
+                "osc": false
+            },
+            "nest": 1,
+            "data": [
+                {
+                      "id": "70ae0685-f9c8-4c27-acfa-c5f5ccc8bc4a",
+                      "nest": 2,
+                      "data": [
+                        {
+                        "id": "70ae0685-f9c8-4c27-acfa-c5f5ccc8b",
+                        "nest": 3
+                      }
+                    ]
+                }
+            ]
+        }
+        ]
+}

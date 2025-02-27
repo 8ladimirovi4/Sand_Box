@@ -3,7 +3,18 @@
     "cookie": "^0.6.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
-    "express": "^4.19.2",
+    "escape-html": "^1.0.3",
+    "express": "^4.21.2",
+    "http": "^0.0.1-security",
     "http-proxy-middleware": "^3.0.0"
-  }
+  },
+  "name": "sand_box",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }
