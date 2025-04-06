@@ -1,31 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="./style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PushState and PopState Example</title>
 </head>
 <body>
-<h1 class="visible"></h1>
-    <div class="parent">
-        <h1>Spongebob</h1>
-        <img class="child" src="./spongebob.png" alt="">
-    </div>
-    <object class="arrow_svg" data="./external_style.svg" type=""></object>
-    <object data="./internal_style.svg" type=""></object>
-    <ul>
-        <li class="li_element">1</li>
-        <li class="li_element">2</li>
-        <li class="li_element">3</li>
-    </ul>
-    <button class="request">запрос на котиков</button>
-    <h1 class="hidden_h1"></h1>
-    <div class="render"></div>
-   <input type="text" onblur="foo()">
-   <button class="set">Внести данные</button>
-   <button class="get">Получить данные</button>
-   <button class="del">Удалить данные</button>
-    <script src="./index.js"></script>
+  <button data-creature="dragon">Dragon</button>
+  <button data-creature="phoenix">Phoenix</button>
+
+  <div id="content"></div>
+
+  <script>
+    document.addEventListener("click", async (event) => {
+      const creature = event.target.getAttribute("data-creature");
+      if (creature) {
+        event.preventDefault();
+        try {
+          const response = await fetch(`creatures/${creature}.json`);
+          const json = await response.json();
+    
+     
+        displayContent(json);
+        // Add a new entry to the history.
+        history.pushState(json, "", creature);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    });
+
+    function displayContent(data) {
+      const contentDiv = document.getElementById("content");
+      contentDiv.innerHTML = `<h1>${data.name}</h1><p>Power: ${data.power}</p>`;
+    }
+
+    function clearContent() {
+      const contentDiv = document.getElementById("content");
+      contentDiv.innerHTML = ""; // Clear the content
+    }
+
+    window.addEventListener("popstate", (event) => {
+      if (!event.state) {
+        // Очистить или скрыть контент при возвращении на старую страницу
+        clearContent();
+      } else {
+        // Отобразить сохраненный контент
+        displayContent(event.state);
+      }
+    });
+  </script>
 </body>
 </html>
