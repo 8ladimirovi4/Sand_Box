@@ -1,57 +1,52 @@
-const scriptsById = {
-    "c7f990f9-7608-4f73-918f-15647c7ae53b": {
+const serverTags = {
+    Pump_1_status: 'on',
+    Tank_1_level: 75,
+    Tank_2_open: true,
+    Tank_2_level: 50
+  };
+
+const figureScripts = {
       scriptCode: `
-        if (tags.isOn && tags.isExist) methods.fill("c7f990f9-7608-4f73-918f-15647c7ae53b", "yellow")
-        else methods.fill("c7f990f9-7608-4f73-918f-15647c7ae53b", "gray")
-        if(tags.isOn && tags.rotate === 50){
-            methods.rotate("c7f990f9-7608-4f73-918f-15647c7ae53b", 50)
+        if(tags.isOn === 'on' && tags.rotate > 50){
+          methods.rotate("c7f990f9-7608-4f73-918f-15647c7ae53b", 50);
+          methods.setBorderColor("c7f990f9-7608-4f73-918f-15647c7ae53b", "green");
         }
-      `,
-      internalTags: {
-        isOn: true,
-        isExist: false,
-        rotate: 50
-      }
-    },
-    "ceacf5f2-2f4c-40b6-8b1b-5bd34f47b4ee": {
-      scriptCode: `
-        if (tags.rotate) methods.rotate("ceacf5f2-2f4c-40b6-8b1b-5bd34f47b4ee", 45)
-      `,
-      internalTags: {
-        rotate: true
-      }
-    },
-    "6495a835-e5c2-4a1e-aed5-c6aee253f044": {
-        scriptCode: `
+        if (tags.isOpen) {
+          methods.setBackgroundColor("c7f990f9-7608-4f73-918f-15647c7ae53b", "red");
+        }
+        if (tags.rotate > 75) {
+          methods.rotate("ceacf5f2-2f4c-40b6-8b1b-5bd34f47b4ee", 45);
+        }
         if(tags.scale > 50){
-        methods.fill("6495a835-e5c2-4a1e-aed5-c6aee253f044", "yellow")
-        }else{
-        methods.fill("6495a835-e5c2-4a1e-aed5-c6aee253f044", "gray")
+          methods.setBackgroundColor("6495a835-e5c2-4a1e-aed5-c6aee253f044", "yellow");
+        } else {
+          methods.setBackgroundColor("6495a835-e5c2-4a1e-aed5-c6aee253f044", "gray");
         }
-        `,
-        internalTags: {
-            scale: 50
-          }
-    }
+      `,
+      internalTags: {
+        isOn: "Pump_1_status", //'on'
+        rotate: "Tank_1_level", //75
+        isOpen: "Tank_2_open", // true
+        scale: "Tank_2_level" //50
+      }
   };
   
 const methods = {
-    fill: (id, color) => {
-        console.log('===>id fill', id)
-        console.log('===>color fill',color)
+    setBackgroundColor: (id, color) => {
+        console.log('===>id setBackgroundColor', id)
+        console.log('===>color setBackgroundColor',color)
         return { id, color }
     },
-    setColor: (id, color) => {
-        console.log('===>id setColor',id)
-        console.log('===>color setColor',color)
-        return { action: 'setColor', color }
+    setBorderColor: (id, color) => {
+        console.log('===>id setBorderColor',id)
+        console.log('===>color setBorderColor',color)
+        return { action: 'setBorderColor', color }
     },
     rotate: (id, angle) => {
         console.log('===>rotate id', id)
         console.log('===>rotate angle',angle)
         return { action: 'rotate', angle }
     },
-    // Добавляй сколько угодно
   };
 
   function runScript(scriptCode, tags, methods) {
@@ -70,38 +65,23 @@ const methods = {
     }
   }
   
-  
-  function applyScriptToSvgElement(svgJson, scriptsById) {
-    const traverse = (element) => {
-      const id = element.attributes?.id;
-      if (id && scriptsById[id]) {
-        const { scriptCode, internalTags } = scriptsById[id];
-        const result = runScript(scriptCode, internalTags, methods);
-  
-        if (result) {
-          if (result.action === "setColor") {
-            const style = element.attributes.style || "";
-            const newStyle = style.replace(/fill:\s*[^;]+/, `fill: ${result.color}`);
-            element.attributes.style = newStyle.includes("fill:") ? newStyle : `${style}; fill: ${result.color}`;
-          }
-  
-          if (result.action === "rotate") {
-            element.attributes.transform = `rotate(${result.angle})`;
-          }
-  
-          if (result.action === "fill") {
-            // Обработка кастомной логики
-          }
-        }
-      }
-  
-      if (Array.isArray(element.children)) {
-        element.children.forEach(traverse);
-      }
-    };
-  
-    traverse(svgJson);
+  function resolveInternalTags(internalTags, serverTags) {
+    const resolved = {};
+    for (const key in internalTags) {
+      const serverTagName = internalTags[key];
+      resolved[key] = serverTags[serverTagName];
+    }
+    return resolved;
   }
-
-  applyScriptToSvgElement(figuresJson, scriptsById);
+  
+  function applyScriptToFigure(figureJson, figureScripts, serverTags) {
+    const figureId = figureJson.attributes?.id;
+    if (!figureId) return;
+  
+    const { scriptCode, internalTags } = figureScripts;
+    const tags = resolveInternalTags(internalTags, serverTags);
+    runScript(scriptCode, tags, methods);
+  }
+  
+  applyScriptToFigure(figuresJson, figureScripts, serverTags);
 
