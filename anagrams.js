@@ -23,14 +23,16 @@ isAnagrams(str1, str2)
 //O(2**n)
 //Число Фибоначчи F(n)
 //F(n) = F(n-1) + F(n-2)
-
+const t1 = performance.now()
 console.time('fib')
 const fib = (n) => {
     if(n<= 1) return n;
 
     return fib(n-2) + fib(n-1)
 }
-fib(4)
+fib(30)
+const t2 = performance.now()
+console.log('===> perf fib', t2 - t1 )
 console.timeEnd('fib')
 
 // fib(4)
