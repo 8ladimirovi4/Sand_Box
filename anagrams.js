@@ -19,3 +19,35 @@ const isAnagrams = (word1, word2) => {
 }
 
 isAnagrams(str1, str2)
+
+//O(2**n)
+//Число Фибоначчи F(n)
+//F(n) = F(n-1) + F(n-2)
+
+console.time('fib')
+const fib = (n) => {
+    if(n<= 1) return n;
+
+    return fib(n-2) + fib(n-1)
+}
+
+fib(40)
+console.timeEnd('fib')
+
+
+console.time('fib1')
+const fib1 = (n) => {
+    let a = 0
+    let b = 1
+
+for (let idx = 2; idx <= n; idx++) {
+    const tmp = b
+    b = a+ b
+    a = tmp
+ }
+
+ return n === 0 ? 0 : b
+}
+
+fib1(7)
+console.timeEnd('fib1')
