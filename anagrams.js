@@ -72,3 +72,37 @@ for (let idx = 2; idx <= n; idx++) {
 
 fib1(7)
 console.timeEnd('fib1')
+
+function isAnagrams1(fst, scd){
+    if(fst.length !== scd.length) return false
+
+    const first = fst.toLowerCase()
+    const second = scd.toLowerCase()
+    const obj1 = {}
+    const obj2 = {}
+
+for (let i = 0; i < first.length; i++) {
+        if(!obj1.hasOwnProperty(first[i])){
+        obj1[first[i]] = 1
+    }else{
+       obj1[first[i]] +=1
+    }
+
+    if(!obj2.hasOwnProperty(second[i])){
+        obj2[second[i]] = 1
+    }else{
+       obj2[second[i]] +=1
+    }
+ }
+
+    
+for (const key in obj1) {
+    if (obj1[key] !== obj2[key]) {
+        return false;
+    }
+  }
+ return true
+}
+
+console.log('===> ',isAnagrams1('aaB', 'bAa') )
+
