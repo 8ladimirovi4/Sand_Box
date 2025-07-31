@@ -34,6 +34,66 @@ for (let i = 1; i <= sortedList.length; i++) {
 
 compress(numbers)
 
+//написать функцию throttle(func, delay, ctx), которая возвращает обертку, вызывающую fn не чаще чем в delay секеунд
+//первый вызов fn должен быть синхронный
+//если игнорирующийся вызов оказался полседним, то он должен выполнится
+
+function throttle (func, delay, ctx){
+    let lastCall = 0
+    let savedArgs;
+    let timerId = null
+   
+
+    return function(...args){
+         const now = Date.now()
+            savedArgs = args
+   
+
+         if(now - lastCall >= delay){
+            lastCall = now
+            func.apply(ctx, savedArgs)
+            timerId = null
+            return;
+        }
+        if(!timerId){
+            timerId = setTimeout(() => {
+            lastCall = Date.now()
+            func.apply(ctx, savedArgs)
+            timerId = null
+//(оставшееся время)
+//                 <--------------> ???
+//|----------------|--------------|-----------------------|
+//^                ^              ^
+//lastCall         now            (lastCall + delay)
+            }, lastCall + delay - now)
+        }
+    }
+} 
+
+function test(){
+    const start = Date.now()
+
+    function log(text){
+        const msPassed = Date.now() - start
+        console.log(`${msPassed}: ${this.name} logged ${text}`)
+    }
+    const throttled = throttle(log, 100, {name: 'me'})
+
+    setTimeout(() => throttled('m'), 0)
+    setTimeout(() => throttled('mo'), 22)
+    setTimeout(() => throttled('mos'), 33)
+    setTimeout(() => throttled('mosc'), 150)
+    setTimeout(() => throttled('moscow'), 400)
+
+    //должно быть в консоле
+    //0 me logged m
+    //100 me logged mos
+    //200 me logged mosc
+    //400 me logged moscow
+}
+
+console.clear()
+test()
 
 
 
