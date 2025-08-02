@@ -1,27 +1,31 @@
-const fetchData = (url, callback) => {
-  setTimeout(() => {
-if(!url.startsWith("http")){
-    callback(new Error('ошибка'))
-}else{
-    callback(null, 'http://fake.com success')
-}
-  },1000)
-}
+function async (generator) { // здесь async это название функции
+    const iterator = generator()
 
-const promisy = (fn) => {
-    return function (...args){
-        return new Promise((resolve, reject) => {
-            fn(...args, (error, result) => {
-                if(error) reject(error)
-                    resolve(result)
-            })
-        })
+    function handle({ done, value }) {
+        return done ? value : Promise.resolve(value)
+            .then((x) => handle(iterator.next(x)))
+            .catch((e) => handle(iterator.throw(e)))
     }
+
+    return handle(iterator.next())
 }
 
-const fetchedData = promisy(fetchData)
+async(function* () { // здесь async это название функции
+    const response = yield fetch('example.com') 
+    const json = yield response.json()
 
-fetchedData('http://fake.com')
-.then(res => console.log('===> res', res))
+    // обработать json
+})
+
+function* gen() {
+  yield 1;
+  return 999;
+}
+
+const g = gen();
+console.log(g.next()); // { value: 1, done: false }
+console.log(g.next()); // { value: 999, done: true }
+console.log(g.next()); // { value: undefined, done: true }
+
 
 
