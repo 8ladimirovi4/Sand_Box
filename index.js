@@ -33,6 +33,7 @@ for (let i = 1; i <= sortedList.length; i++) {
 }
 
 compress(numbers)
+//------------------------------------------------------------------//
 
 //написать функцию throttle(func, delay, ctx), которая возвращает обертку, вызывающую fn не чаще чем в delay секеунд
 //первый вызов fn должен быть синхронный
@@ -94,6 +95,48 @@ function test(){
 
 console.clear()
 test()
+//------------------------------------------------------------------//
 
+//debounce
 
+function debounce (fn, delay, ctx) {
+    let timerId = null
+    let savedArgs = null
 
+    return function (...args){
+        savedArgs = args
+
+        if(timerId) clearTimeout(timerId)
+
+           timerId = setTimeout(() => {
+                fn.apply(ctx, savedArgs)
+                  timerId = null
+           }, delay)
+    }
+}
+
+function testDebounce() {
+    const start = Date.now();
+
+    function log(text) {
+        const msPassed = Date.now() - start;
+        console.log(`${msPassed}: ${this.name} logged ${text}`);
+    }
+
+    const debounced = debounce(log, 1000, { name: 'me' });
+
+    setTimeout(() => debounced('m'), 0);
+    setTimeout(() => debounced('mo'), 500);
+    setTimeout(() => debounced('mos'), 800);
+    setTimeout(() => debounced('mosc'), 2500);
+    setTimeout(() => debounced('moscow'), 2600);
+
+    // Ожидаемое поведение:
+    // Все предыдущие вызовы отменяются
+    // Последний вызов — 'moscow' — выполнится через 100мс после вызова в 120мс (т.е. ~220мс)
+    // Примерный вывод:
+    // 220: me logged moscow
+}
+
+console.clear()
+testDebounce()
