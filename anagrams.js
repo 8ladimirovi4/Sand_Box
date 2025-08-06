@@ -110,26 +110,3 @@ function log(date, importance, message) {
     return `${date} | ${importance} | ${message}`
 }
 
-
-// Напишите простую функцию log(date, importance, message) и "закаррируйте" ее. Создайте на ее основе более специфичные логгеры: logNow (с уже зафиксированной датой) и logInfoNow (с зафиксированной датой и важностью 'INFO').
-
-const log = (date, importance, message) => {
-  console.log(`[${date}] [${importance}] ${message}`);
-};
-
-function carry (fn) {
-
-    return function carried(...args){
-        if(args.length >= fn.length){
-           return fn.apply(this, args)
-        }else{
-            return function(...args2){
-                return carried.apply(this, args.concat(args2))
-            }
-        }
-    }
-}
-
-const carriedLog = carry(log)
-console.log('===> ', carriedLog(Date.now())('INFO')('Система запущена'))
-
