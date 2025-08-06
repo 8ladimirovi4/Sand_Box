@@ -217,3 +217,51 @@ function flat(list, depth = 1) {
 }
 
 console.log('===> ', flat(arr));
+//------------------------------------------------------------------//
+
+function promiseRace (promises) {
+
+       if (promises == null || typeof promises[Symbol.iterator] !== 'function') {
+        throw new TypeError(`${typeof promises} is not iterable`);
+    }
+
+return new Promise((resolve, reject) => {
+    const promisesArray = [...promises]; 
+
+        if (promisesArray.length === 0) {
+            return;
+        }
+
+ for(p of promisesArray){
+      Promise.resolve(p) //зарезолвить значение, если передали не промис
+        .then(resolve)
+        .catch(reject) 
+     }
+})
+    
+}
+
+const promise1 = new Promise((resolve) => setTimeout(() => resolve('promise 1 resolved'), 2000));
+const promise2 = new Promise((_, reject) => setTimeout(() => reject('promise 2 rejected'), 1000));
+
+// Тест 1: Стандартный случай (promise2 победит)
+promiseRace([promise1, promise2])
+    .then(data => console.log('Тест 1:', data))
+    .catch(err => console.log('Тест 1:', err)); // Вывод: Тест 1: promise 2 rejected
+
+// Тест 2: Массив с не-промисом (42 "победит" мгновенно)
+promiseRace([promise1, 42])
+    .then(data => console.log('Тест 2:', data))   // Вывод: Тест 2: 42
+    .catch(err => console.log('Тест 2:', err));
+
+// Тест 3: Пустой массив (ничего не выведет, промис останется pending)
+promiseRace([])
+    .then(() => console.log('Тест 3: resolved'))
+    .catch(() => console.log('Тест 3: rejected'));
+
+// Тест 4: Невалидный ввод
+try {
+    promiseRace(123);
+} catch (e) {
+    console.log('Тест 4:', e.message); // Вывод: Тест 4: number is not iterable
+}
