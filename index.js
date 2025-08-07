@@ -351,3 +351,28 @@ function rangeSum(left, right) {
 console.log(rangeSum(0, 2)); // 7 сумма nums [2, 4, 1]
 console.log(rangeSum(1, 3)); // 8 nums [4, 1, 3]
 console.log(rangeSum(2, 4)); // 9 nums [1, 3, 5]
+//------------------------------------------------------------------//
+
+
+// шаблон бинарного поиска
+function binarySearchTemplate(arr, target) {
+  let left = 0
+  let right = arr.length - 1
+
+  while(left <= right){
+    const midIdx = left + Math.floor((right - left) / 2)
+    const midVal = arr[midIdx]
+
+    if(target === midVal){
+      return midIdx
+    }else if (target < midVal){
+      right = midIdx - 1
+    }else{
+      left = midIdx + 1
+    }
+ }
+   return -1
+}
+
+binarySearchTemplate([1,2,3,4,5,6,7], 7)
+//------------------------------------------------------------------//
