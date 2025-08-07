@@ -420,3 +420,49 @@ function findRange(){
 }
 
 console.log('===> ', findRange())
+
+const nums1 = [1, 7, 2, 15]
+const target1 = 9
+//------------------------------------------------------------------//
+
+//Hash (HashMap / HashSet / Map / Set)
+// Условие: Дан массив чисел nums и число target. Верните индексы двух чисел, которые в сумме дают target.
+// Пример: nums = [2, 7, 11, 15], target = 9 -> [0, 1] (потому что nums[0] + nums[1] = 9)
+
+function twoSum(nums, target) {
+    const map = new Map(); // { число => индекс }
+
+    for (let i = 0; i < nums.length; i++) {
+        const currentNum = nums[i];
+        const complement = target - currentNum;
+
+        if (map.has(complement)) {
+            // Нашли!
+            return [map.get(complement), i];
+        }
+
+        // Если не нашли, добавляем текущее число и его индекс в карту
+        map.set(currentNum, i);
+    }
+}
+
+twoSum(nums1, target1)
+
+// Условие: Дан массив строк. Сгруппируйте анаграммы вместе.
+// Пример: ["eat", "tea", "tan", "ate", "nat", "bat"] -> [["bat"], ["nat","tan"], ["ate","eat","tea"]]
+
+function groupAnagrams(strs) {
+  const map = new Map()
+
+  for(let str of strs){
+      sortedStr = str.split('').sort().join('')
+      if(!map.has(sortedStr)){
+        map.set(sortedStr, [])
+      }
+      map.get(sortedStr).push(str)
+  }
+  return Array.from(map)
+}
+
+console.log('===> ',groupAnagrams(["eat", "tea", "tan", "ate", "nat", "bat"]) )
+ 
