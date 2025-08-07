@@ -376,3 +376,47 @@ function binarySearchTemplate(arr, target) {
 
 binarySearchTemplate([1,2,3,4,5,6,7], 7)
 //------------------------------------------------------------------//
+
+//бинарным поиском найти диапазон повторяющихся чисел
+
+const sortedNums= [1,2,5,5,5,5,5,7]
+const target = 5
+
+function findBoundary(arr, target, findFirst) {
+  let left = 0
+  let right = arr.length - 1
+  let ans = -1
+
+  while(left <= right){
+    const midIdx = left + Math.floor((right - left) / 2)
+    const midVal = arr[midIdx]
+
+    if (midVal > target){
+      right = midIdx - 1
+    }else if (midVal < target ){
+      left = midIdx + 1
+    }else{
+      ans = midIdx
+      if(findFirst){
+        right = midIdx - 1
+      }else{
+         left = midIdx + 1
+      }
+    }
+ }
+   return ans
+}
+
+function findRange(){
+  const first = findBoundary(sortedNums, target, true)
+
+  if(first === -1){
+    return [-1, -1]
+  }
+
+  const last = findBoundary(sortedNums, target, false)
+
+  return [first, last]
+}
+
+console.log('===> ', findRange())
