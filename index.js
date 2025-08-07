@@ -265,3 +265,61 @@ try {
 } catch (e) {
     console.log('Тест 4:', e.message); // Вывод: Тест 4: number is not iterable
 }
+//------------------------------------------------------------------//
+
+//hash таблица
+
+class HashMap {
+  constructor(size) {
+    //this.array = new Array(size).fill(null).map(() => new Array());
+    this.array = new Array(size).fill(null).map(() => new Map());
+  }
+
+  hash(string) {
+    let num = 0;
+    for (let i = 0; i < string.length; i++) {
+      const item = string[i];
+      num += item.charCodeAt(0);
+    }
+    return num;
+  }
+
+  getIndex(key) {
+    return this.hash(key) % this.array.length;
+  }
+
+  set(key, value) {
+      if (key == null) return;
+
+    const bucket = this.array[this.getIndex(key)];
+  
+    // for (let entry of bucket) {
+    //   if (entry[0] === key) {
+    //     entry[1] = value;
+    //     return;
+    //   }
+    // }
+    // bucket.push([key, value]);
+    bucket.set(key, value);
+  }
+  get(key) {
+    const bucket = this.array[this.getIndex(key)];
+    // if (!Array.isArray(bucket)) return;
+
+    // for (let entry of bucket) {
+    //   if (entry[0] === key) {
+    //     return entry[1];
+    //   }
+    // }
+    return bucket.get(key);
+  }
+}
+
+const myHashMap = new HashMap(10);
+
+myHashMap.set('cat', 'mow');
+myHashMap.set('dog', 'bark');
+
+console.log('===> ', myHashMap);
+console.log('===> ', myHashMap.get('cat'));
+console.log('===> ', myHashMap.get('dog'));
