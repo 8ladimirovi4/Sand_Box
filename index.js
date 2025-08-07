@@ -323,3 +323,31 @@ myHashMap.set('dog', 'bark');
 console.log('===> ', myHashMap);
 console.log('===> ', myHashMap.get('cat'));
 console.log('===> ', myHashMap.get('dog'));
+
+//------------------------------------------------------------------//
+
+//префиксные суммы
+
+// Основная идея: Мы заранее вычисляем и сохраняем сумму всех элементов от начала массива до каждого индекса i. Это позволяет нам находить сумму любого подмассива (отрезка) [left, right] за константное время O(1) с помощью простой арифметической операции, вместо того чтобы каждый раз пробегать по этому отрезку циклом.
+
+// Формула:
+// Создаем массив prefix размером N+1. prefix[0] = 0.
+// prefix[i+1] = prefix[i] + nums[i]
+// Сумма на отрезке [left, right] вычисляется как prefix[right + 1] - prefix[left].
+
+const nums = [2, 4, 1, 3, 5];
+const prefix = [0];
+
+// создаём prefix
+for (let i = 0; i < nums.length; i++) {
+  prefix[i + 1] = prefix[i] + nums[i];
+}
+//[0, 2, 6, 7, 10, 15] prefix
+
+function rangeSum(left, right) {
+  return prefix[right + 1] - prefix[left];
+}
+
+console.log(rangeSum(0, 2)); // 7 сумма nums [2, 4, 1]
+console.log(rangeSum(1, 3)); // 8 nums [4, 1, 3]
+console.log(rangeSum(2, 4)); // 9 nums [1, 3, 5]
