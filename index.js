@@ -487,4 +487,29 @@ function quickSort(arr) {
 }
 
 console.log('===> ', quickSort([10, 8, 2, 1, 6]));
- 
+//------------------------------------------------------------------//
+
+//правильная скобочная последовательность
+
+function isValidBracketSenquance(str){
+  let count = 0
+  if(str.length === 0) return
+
+  for (let i = 0; i < str.length; i++) {
+    if(str[i] === '('){
+      count +=1
+    }else{
+      count -=1
+    }
+
+    if(count < 0){
+        return false
+    } 
+  }
+  if(count !== 0){
+    return false
+  }
+  return true
+}
+
+console.log('===> ', isValidBracketSenquance('(()())'))
