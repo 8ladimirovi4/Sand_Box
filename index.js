@@ -520,21 +520,28 @@ console.log('===> ', isValidBracketSenquance('(()())'))
 // чтобы каждый символ встречался только в одной подстроке.
 
 function getSubstrings(str){
-const groups = []
-let currentGroup = []
 
+const lastIndex = {}
+for (let i = 0; i < str.length; i++) {
+   const current = str[i]
+  lastIndex[current] = i
+  
+}
+
+const result = []
+let start = 0
+let end = 0
 
 for (let i = 0; i < str.length; i++) {
   const current = str[i]
-  const start = i
-  const end = str.lastIndexOf(current)
 
-  if(!currentGroup.includes(current)){
-    currentGroup = str.slice(start, end + 1).split('')
-      groups.push(currentGroup.join(''))
+  end = Math.max(end, lastIndex[current]);
+
+  if(i === end){
+    result.push(str.slice(start, end + 1))
+    start = i + 1
   }
-}
-
-return groups
+ }
+ return result
 }
 console.log('===> ', getSubstrings('abac'))
