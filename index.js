@@ -513,3 +513,28 @@ function isValidBracketSenquance(str){
 }
 
 console.log('===> ', isValidBracketSenquance('(()())'))
+//------------------------------------------------------------------//
+
+// Есть строка из каких-то символов.
+// Нужно разбить ее на максимальное количество подстрок так,
+// чтобы каждый символ встречался только в одной подстроке.
+
+function getSubstrings(str){
+const groups = []
+let currentGroup = []
+
+
+for (let i = 0; i < str.length; i++) {
+  const current = str[i]
+  const start = i
+  const end = str.lastIndexOf(current)
+
+  if(!currentGroup.includes(current)){
+    currentGroup = str.slice(start, end + 1).split('')
+      groups.push(currentGroup.join(''))
+  }
+}
+
+return groups
+}
+console.log('===> ', getSubstrings('abac'))
