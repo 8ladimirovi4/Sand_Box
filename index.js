@@ -583,3 +583,70 @@ function isEqualTrees(p, q){
 }
 
 console.log('===> ', isEqualTrees(p, q))
+
+
+class TreeNode {
+  constructor(val, left = null, right = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+const tree1 = new TreeNode(
+  1,
+  new TreeNode(2),
+  new TreeNode(3, 
+        new TreeNode(4, 
+             new TreeNode(5))))
+
+             // {
+//   "val": 1,
+//   "left": {
+//     "val": 2,
+//     "left": null,
+//     "right": null
+//   },
+//   "right": {
+//     "val": 3,
+//     "left": {
+//       "val": 4,
+//       "left": {
+//         "val": 5,
+//         "left": null,
+//         "right": null
+//       },
+//       "right": null
+//     },
+//     "right": null
+//   }
+// }
+
+//             1                
+//         |         |  
+//         2         3 
+//      |    |    |     |       
+//      0    0    4     0   
+//              |   |
+//              5   0
+//            |  |
+//            0  0
+
+function checkHeight(node) {
+  if(!node) return 0
+
+  const leftH = checkHeight(node.left)
+  if(leftH === -1) return -1
+
+  const rightH = checkHeight(node.right)
+  if(rightH === -1) return -1
+
+  if(Math.abs(leftH - rightH) > 1) return -1
+const result = Math.max(leftH, rightH) + 1
+  return result
+}
+
+function isBalanced(root){
+  // -1 !== -1 false
+  return checkHeight(root) !== -1
+}
+console.log('===> ', isBalanced(tree1))
