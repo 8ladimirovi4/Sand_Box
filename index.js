@@ -545,3 +545,41 @@ for (let i = 0; i < str.length; i++) {
  return result
 }
 console.log('===> ', getSubstrings('abac'))
+//------------------------------------------------------------------//
+
+//Сравнить 2 бинарных дерева на идентичность структуры и занчений
+
+// TreeNode1 {
+//   val: 1,
+//   left: TreeNode { val: 2, left: null, right: null },
+//   right: TreeNode { val: 3, left: null, right: null }
+// }
+
+// TreeNode2 {
+//   val: 1,
+//   left: TreeNode { val: 2, left: null, right: null },
+//   right: TreeNode { val: 3, left: null, right: null }
+// }
+
+class TreeNode {
+  constructor(val, left = null, right = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+const p = new TreeNode(1, new TreeNode(2), new TreeNode(3))
+const q = new TreeNode(1, new TreeNode(2), new TreeNode(3))
+
+function isEqualTrees(p, q){
+  if(!p && !q) return true  // оба пусты — совпадение
+
+  if(!p || !q) return false // один пуст — несовпадение
+
+  if(p.val !== q.val) return false
+
+  //оба узла есть
+  return isEqualTrees(p.left, q.left) && isEqualTrees(p.right, q.right)
+}
+
+console.log('===> ', isEqualTrees(p, q))
