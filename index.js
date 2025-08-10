@@ -583,7 +583,7 @@ function isEqualTrees(p, q){
 }
 
 console.log('===> ', isEqualTrees(p, q))
-
+//------------------------------------------------------------------//
 
 class TreeNode {
   constructor(val, left = null, right = null) {
