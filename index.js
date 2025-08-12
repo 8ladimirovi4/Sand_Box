@@ -194,7 +194,6 @@ console.log(deepEqual(obj1, obj2)); // true
 
 // Реализуйте flatten с ограничением по глубине, как нативный arr.flat(depth). Функция flatten(arr, depth = 1) должна "сплющивать" массив только на указанное количество уровней.
 
-
 const arr = [1, 2, [3, 4, [5, 6]]];
 
 function flat(list, depth = 1) {
@@ -219,51 +218,53 @@ function flat(list, depth = 1) {
 console.log('===> ', flat(arr));
 //------------------------------------------------------------------//
 
-function promiseRace (promises) {
+function promiseRace(promises) {
+  if (promises == null || typeof promises[Symbol.iterator] !== 'function') {
+    throw new TypeError(`${typeof promises} is not iterable`);
+  }
 
-       if (promises == null || typeof promises[Symbol.iterator] !== 'function') {
-        throw new TypeError(`${typeof promises} is not iterable`);
+  return new Promise((resolve, reject) => {
+    const promisesArray = [...promises];
+
+    if (promisesArray.length === 0) {
+      return;
     }
 
-return new Promise((resolve, reject) => {
-    const promisesArray = [...promises]; 
-
-        if (promisesArray.length === 0) {
-            return;
-        }
-
- for(p of promisesArray){
+    for (p of promisesArray) {
       Promise.resolve(p) //зарезолвить значение, если передали не промис
         .then(resolve)
-        .catch(reject) 
-     }
-})
-    
+        .catch(reject);
+    }
+  });
 }
 
-const promise1 = new Promise((resolve) => setTimeout(() => resolve('promise 1 resolved'), 2000));
-const promise2 = new Promise((_, reject) => setTimeout(() => reject('promise 2 rejected'), 1000));
+const promise1 = new Promise((resolve) =>
+  setTimeout(() => resolve('promise 1 resolved'), 2000)
+);
+const promise2 = new Promise((_, reject) =>
+  setTimeout(() => reject('promise 2 rejected'), 1000)
+);
 
 // Тест 1: Стандартный случай (promise2 победит)
 promiseRace([promise1, promise2])
-    .then(data => console.log('Тест 1:', data))
-    .catch(err => console.log('Тест 1:', err)); // Вывод: Тест 1: promise 2 rejected
+  .then((data) => console.log('Тест 1:', data))
+  .catch((err) => console.log('Тест 1:', err)); // Вывод: Тест 1: promise 2 rejected
 
 // Тест 2: Массив с не-промисом (42 "победит" мгновенно)
 promiseRace([promise1, 42])
-    .then(data => console.log('Тест 2:', data))   // Вывод: Тест 2: 42
-    .catch(err => console.log('Тест 2:', err));
+  .then((data) => console.log('Тест 2:', data)) // Вывод: Тест 2: 42
+  .catch((err) => console.log('Тест 2:', err));
 
 // Тест 3: Пустой массив (ничего не выведет, промис останется pending)
 promiseRace([])
-    .then(() => console.log('Тест 3: resolved'))
-    .catch(() => console.log('Тест 3: rejected'));
+  .then(() => console.log('Тест 3: resolved'))
+  .catch(() => console.log('Тест 3: rejected'));
 
 // Тест 4: Невалидный ввод
 try {
-    promiseRace(123);
+  promiseRace(123);
 } catch (e) {
-    console.log('Тест 4:', e.message); // Вывод: Тест 4: number is not iterable
+  console.log('Тест 4:', e.message); // Вывод: Тест 4: number is not iterable
 }
 //------------------------------------------------------------------//
 
@@ -289,10 +290,10 @@ class HashMap {
   }
 
   set(key, value) {
-      if (key == null) return;
+    if (key == null) return;
 
     const bucket = this.array[this.getIndex(key)];
-  
+
     // for (let entry of bucket) {
     //   if (entry[0] === key) {
     //     entry[1] = value;
@@ -353,76 +354,75 @@ console.log(rangeSum(1, 3)); // 8 nums [4, 1, 3]
 console.log(rangeSum(2, 4)); // 9 nums [1, 3, 5]
 //------------------------------------------------------------------//
 
-
 // шаблон бинарного поиска
 function binarySearchTemplate(arr, target) {
-  let left = 0
-  let right = arr.length - 1
+  let left = 0;
+  let right = arr.length - 1;
 
-  while(left <= right){
-    const midIdx = left + Math.floor((right - left) / 2)
-    const midVal = arr[midIdx]
+  while (left <= right) {
+    const midIdx = left + Math.floor((right - left) / 2);
+    const midVal = arr[midIdx];
 
-    if(target === midVal){
-      return midIdx
-    }else if (target < midVal){
-      right = midIdx - 1
-    }else{
-      left = midIdx + 1
+    if (target === midVal) {
+      return midIdx;
+    } else if (target < midVal) {
+      right = midIdx - 1;
+    } else {
+      left = midIdx + 1;
     }
- }
-   return -1
+  }
+  return -1;
 }
 
-binarySearchTemplate([1,2,3,4,5,6,7], 7)
+binarySearchTemplate([1, 2, 3, 4, 5, 6, 7], 7);
 //------------------------------------------------------------------//
 
 //бинарным поиском найти диапазон повторяющихся чисел
 
-const sortedNums= [1,2,5,5,5,5,5,7]
-const target = 5
+const sortedNums = [1, 2, 5, 5, 5, 5, 5, 7];
+const target = 5;
 
 function findBoundary(arr, target, findFirst) {
-  let left = 0
-  let right = arr.length - 1
-  let ans = -1
+  let left = 0;
+  let right = arr.length - 1;
+  let ans = -1;
 
-  while(left <= right){
-    const midIdx = left + Math.floor((right - left) / 2)
-    const midVal = arr[midIdx]
+  while (left <= right) {
+    const midIdx = left + Math.floor((right - left) / 2);
+    const midVal = arr[midIdx];
 
-    if (midVal > target){
-      right = midIdx - 1
-    }else if (midVal < target ){
-      left = midIdx + 1
-    }else{
-      ans = midIdx
-      if(findFirst){
-        right = midIdx - 1
-      }else{
-         left = midIdx + 1
+    if (midVal > target) {
+      right = midIdx - 1;
+    } else if (midVal < target) {
+      left = midIdx + 1;
+    } else {
+      ans = midIdx;
+      if (findFirst) {
+        right = midIdx - 1;
+      } else {
+        left = midIdx + 1;
       }
     }
- }
-   return ans
+  }
+  return ans;
 }
 
-function findRange(){
-  const first = findBoundary(sortedNums, target, true)
+function findRange() {
+  const first = findBoundary(sortedNums, target, true);
 
-  if(first === -1){
-    return [-1, -1]
+  if (first === -1) {
+    return [-1, -1];
   }
 
-  const last = findBoundary(sortedNums, target, false)
+  const last = findBoundary(sortedNums, target, false);
 
-  return [first, last]
+  return [first, last];
 }
 
-console.log('===> ', findRange())
+console.log('===> ', findRange());
 
-const nums1 = [1, 7, 2, 15]
-const target1 = 9
+const nums1 = [1, 7, 2, 15];
+const target1 = 9;
 //------------------------------------------------------------------//
 
 //Hash (HashMap / HashSet / Map / Set)
@@ -430,41 +430,41 @@ const target1 = 9
 // Пример: nums = [2, 7, 11, 15], target = 9 -> [0, 1] (потому что nums[0] + nums[1] = 9)
 
 function twoSum(nums, target) {
-    const map = new Map(); // { число => индекс }
+  const map = new Map(); // { число => индекс }
 
-    for (let i = 0; i < nums.length; i++) {
-        const currentNum = nums[i];
-        const complement = target - currentNum;
+  for (let i = 0; i < nums.length; i++) {
+    const currentNum = nums[i];
+    const complement = target - currentNum;
 
-        if (map.has(complement)) {
-            // Нашли!
-            return [map.get(complement), i];
-        }
-
-        // Если не нашли, добавляем текущее число и его индекс в карту
-        map.set(currentNum, i);
+    if (map.has(complement)) {
+      // Нашли!
+      return [map.get(complement), i];
     }
+
+    // Если не нашли, добавляем текущее число и его индекс в карту
+    map.set(currentNum, i);
+  }
 }
 
-twoSum(nums1, target1)
+twoSum(nums1, target1);
 
 // Условие: Дан массив строк. Сгруппируйте анаграммы вместе.
 // Пример: ["eat", "tea", "tan", "ate", "nat", "bat"] -> [["bat"], ["nat","tan"], ["ate","eat","tea"]]
 
 function groupAnagrams(strs) {
-  const map = new Map()
+  const map = new Map();
 
-  for(let str of strs){
-      sortedStr = str.split('').sort().join('')
-      if(!map.has(sortedStr)){
-        map.set(sortedStr, [])
-      }
-      map.get(sortedStr).push(str)
+  for (let str of strs) {
+    sortedStr = str.split('').sort().join('');
+    if (!map.has(sortedStr)) {
+      map.set(sortedStr, []);
+    }
+    map.get(sortedStr).push(str);
   }
-  return Array.from(map)
+  return Array.from(map);
 }
 
-console.log('===> ',groupAnagrams(["eat", "tea", "tan", "ate", "nat", "bat"]) )
+console.log('===> ', groupAnagrams(['eat', 'tea', 'tan', 'ate', 'nat', 'bat']));
 //------------------------------------------------------------------//
 
 //Quick sort
@@ -475,7 +475,8 @@ function quickSort(arr) {
   const left = [];
   const right = [];
 
-  for (let i = 0; i < arr.length - 1; i++) { // проход по всем элементам кроме pivot
+  for (let i = 0; i < arr.length - 1; i++) {
+    // проход по всем элементам кроме pivot
     if (arr[i] < pivot) {
       left.push(arr[i]);
     } else {
@@ -491,60 +492,58 @@ console.log('===> ', quickSort([10, 8, 2, 1, 6]));
 
 //правильная скобочная последовательность
 
-function isValidBracketSenquance(str){
-  let count = 0
-  if(str.length === 0) return
+function isValidBracketSenquance(str) {
+  let count = 0;
+  if (str.length === 0) return;
 
   for (let i = 0; i < str.length; i++) {
-    if(str[i] === '('){
-      count +=1
-    }else{
-      count -=1
+    if (str[i] === '(') {
+      count += 1;
+    } else {
+      count -= 1;
     }
 
-    if(count < 0){
-        return false
-    } 
+    if (count < 0) {
+      return false;
+    }
   }
-  if(count !== 0){
-    return false
+  if (count !== 0) {
+    return false;
   }
-  return true
+  return true;
 }
 
-console.log('===> ', isValidBracketSenquance('(()())'))
+console.log('===> ', isValidBracketSenquance('(()())'));
 //------------------------------------------------------------------//
 
 // Есть строка из каких-то символов.
 // Нужно разбить ее на максимальное количество подстрок так,
 // чтобы каждый символ встречался только в одной подстроке.
 
-function getSubstrings(str){
-
-const lastIndex = {}
-for (let i = 0; i < str.length; i++) {
-   const current = str[i]
-  lastIndex[current] = i
-  
-}
-
-const result = []
-let start = 0
-let end = 0
-
-for (let i = 0; i < str.length; i++) {
-  const current = str[i]
-
-  end = Math.max(end, lastIndex[current]);
-
-  if(i === end){
-    result.push(str.slice(start, end + 1))
-    start = i + 1
+function getSubstrings(str) {
+  const lastIndex = {};
+  for (let i = 0; i < str.length; i++) {
+    const current = str[i];
+    lastIndex[current] = i;
   }
- }
- return result
+
+  const result = [];
+  let start = 0;
+  let end = 0;
+
+  for (let i = 0; i < str.length; i++) {
+    const current = str[i];
+
+    end = Math.max(end, lastIndex[current]);
+
+    if (i === end) {
+      result.push(str.slice(start, end + 1));
+      start = i + 1;
+    }
+  }
+  return result;
 }
-console.log('===> ', getSubstrings('abac'))
+console.log('===> ', getSubstrings('abac'));
 //------------------------------------------------------------------//
 
 //Сравнить 2 бинарных дерева на идентичность структуры и занчений
@@ -568,21 +567,21 @@ class TreeNode {
     this.right = right;
   }
 }
-const p = new TreeNode(1, new TreeNode(2), new TreeNode(3))
-const q = new TreeNode(1, new TreeNode(2), new TreeNode(3))
+const p = new TreeNode(1, new TreeNode(2), new TreeNode(3));
+const q = new TreeNode(1, new TreeNode(2), new TreeNode(3));
 
-function isEqualTrees(p, q){
-  if(!p && !q) return true  // оба пусты — совпадение
+function isEqualTrees(p, q) {
+  if (!p && !q) return true; // оба пусты — совпадение
 
-  if(!p || !q) return false // один пуст — несовпадение
+  if (!p || !q) return false; // один пуст — несовпадение
 
-  if(p.val !== q.val) return false
+  if (p.val !== q.val) return false;
 
   //оба узла есть
-  return isEqualTrees(p.left, q.left) && isEqualTrees(p.right, q.right)
+  return isEqualTrees(p.left, q.left) && isEqualTrees(p.right, q.right);
 }
 
-console.log('===> ', isEqualTrees(p, q))
+console.log('===> ', isEqualTrees(p, q));
 //------------------------------------------------------------------//
 
 class TreeNode {
@@ -595,11 +594,10 @@ class TreeNode {
 const tree1 = new TreeNode(
   1,
   new TreeNode(2),
-  new TreeNode(3, 
-        new TreeNode(4, 
-             new TreeNode(5))))
+  new TreeNode(3, new TreeNode(4, new TreeNode(5)))
+);
 
-             // {
+// {
 //   "val": 1,
 //   "left": {
 //     "val": 2,
@@ -621,32 +619,65 @@ const tree1 = new TreeNode(
 //   }
 // }
 
-//             1                
-//         |         |  
-//         2         3 
-//      |    |    |     |       
-//      0    0    4     0   
+//             1
+//         |         |
+//         2         3
+//      |    |    |     |
+//      0    0    4     0
 //              |   |
 //              5   0
 //            |  |
 //            0  0
 
 function checkHeight(node) {
-  if(!node) return 0
+  if (!node) return 0;
 
-  const leftH = checkHeight(node.left)
-  if(leftH === -1) return -1
+  const leftH = checkHeight(node.left);
+  if (leftH === -1) return -1;
 
-  const rightH = checkHeight(node.right)
-  if(rightH === -1) return -1
+  const rightH = checkHeight(node.right);
+  if (rightH === -1) return -1;
 
-  if(Math.abs(leftH - rightH) > 1) return -1
-const result = Math.max(leftH, rightH) + 1
+  if (Math.abs(leftH - rightH) > 1) return -1;
+  const result = Math.max(leftH, rightH) + 1;
+  return result;
+}
+
+function isBalanced(root) {
+  // -1 !== -1 false
+  return checkHeight(root) !== -1;
+}
+console.log('===> ', isBalanced(tree1));
+
+//------------------------------------------------------------------//
+//romanToInteger
+
+function romanToInteger(str) {
+  let result = 0
+  const dict = {
+    I: 1,
+    V: 5,
+    X: 10,
+    L: 50,
+    C: 100,
+    D: 500,
+    M: 1000,
+  };
+
+  for (let i = 0; i < str.length; i++) {
+    const currentNum = dict[str[i]];
+    const nextNum = dict[str[i + 1]];
+
+    if (currentNum < (nextNum ?? 0)) {
+      result += (nextNum - currentNum);
+      i++;
+    } else {
+      result += currentNum;
+    }
+  }
   return result
 }
 
-function isBalanced(root){
-  // -1 !== -1 false
-  return checkHeight(root) !== -1
-}
-console.log('===> ', isBalanced(tree1))
+console.log('===>,', romanToInteger('LXXII')); //72
+console.log('===>,', romanToInteger('IVIV')); //8
+console.log('===> ', romanToInteger('MCMXCIV')); //1994
