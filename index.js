@@ -715,3 +715,7 @@ const integerToRoman = (number) => {
 
   return result;
 }
+
+console.log('===>,', integerToRoman(72)); //'LXXII'
+console.log('===>,', integerToRoman(8)); //'IVIV'
+console.log('===> ', integerToRoman(1994)); //'MCMXCIV'
