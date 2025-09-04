@@ -1,20 +1,15 @@
-const fs = require('fs');
-const path = require('path');
 const { fetchPage } = require('./httpClient');
 const { extractArticleText } = require('./articleProcessor');
-const { createArticleHTML } = require('./htmlGenerator');
-const { ensureNewsFolder } = require('./folderManager');
 const { database } = require('./database');
 const { telegramBot } = require('./telegramBot');
 
 /**
- * Сохраняет статью в HTML файл и базу данных
- * @param {string} newsPath - Путь к папке news
+ * Сохраняет статью в базу данных
  * @param {Object} article - Объект статьи с href и text
  * @param {number} index - Индекс статьи
  * @returns {Promise<boolean>} Успешность сохранения
  */
-async function saveArticle(newsPath, article, index) {
+async function saveArticle(article, index) {
     try {
         console.log(`📄 Обрабатываю статью ${index + 1}: ${article.text.substring(0, 50)}...`);
         
@@ -36,32 +31,17 @@ async function saveArticle(newsPath, article, index) {
             return false;
         }
         
-        // Создаем безопасное имя файла
-        const safeTitle = article.text
-            .replace(/[<>:"/\\|?*]/g, '')
-            .substring(0, 50)
-            .trim();
-        
-        const fileName = `${(index + 1).toString().padStart(2, '0')}_${safeTitle}.html`;
-        const filePath = path.join(newsPath, fileName);
-        
-        // Создаем HTML содержимое
-        const htmlContent = createArticleHTML(article.text, articleText, article.href);
-        
-        // Сохраняем файл
-        fs.writeFileSync(filePath, htmlContent, 'utf8');
-        
         // Сохраняем в базу данных
         const articleData = {
             title: article.text,
             url: article.href,
             content: articleText,
-            htmlFilePath: filePath
+            htmlFilePath: null // Больше не создаем HTML файлы
         };
         
         await database.saveArticle(articleData);
         
-        console.log(`✅ Статья ${index + 1} сохранена: ${fileName} (в БД и файл)`);
+        console.log(`✅ Статья ${index + 1} сохранена в базу данных`);
         return true;
         
     } catch (error) {
@@ -73,19 +53,15 @@ async function saveArticle(newsPath, article, index) {
 /**
  * Основная функция для сохранения всех статей
  * @param {Array} articles - Массив объектов статей с href и text
- * @param {string} folderName - Название папки (по умолчанию 'news')
  * @param {boolean} sendToTelegram - Отправлять ли новости в Telegram (по умолчанию true)
  */
-async function saveAllArticles(articles, folderName = 'news', sendToTelegram = true) {
+async function saveAllArticles(articles, sendToTelegram = true) {
     if (!articles || !Array.isArray(articles) || articles.length === 0) {
         console.log('❌ Нет статей для сохранения');
         return;
     }
     
-    console.log(`🚀 Начинаю сохранение ${articles.length} статей...`);
-    
-    // Создаем папку
-    const newsPath = ensureNewsFolder(folderName);
+    console.log(`🚀 Начинаю сохранение ${articles.length} статей в базу данных...`);
     
     let successCount = 0;
     let failCount = 0;
@@ -93,7 +69,7 @@ async function saveAllArticles(articles, folderName = 'news', sendToTelegram = t
     
     // Сохраняем каждую статью
     for (let i = 0; i < articles.length; i++) {
-        const success = await saveArticle(newsPath, articles[i], i);
+        const success = await saveArticle(articles[i], i);
         if (success) {
             successCount++;
             // Добавляем статью в массив для отправки в Telegram
@@ -116,7 +92,6 @@ async function saveAllArticles(articles, folderName = 'news', sendToTelegram = t
     console.log('\n📊 Результаты сохранения:');
     console.log(`✅ Успешно сохранено: ${successCount}`);
     console.log(`❌ Ошибок: ${failCount}`);
-    console.log(`📁 Файлы сохранены в папку: ${newsPath}`);
     
     // Отправляем новости в Telegram, если есть сохраненные статьи
     if (sendToTelegram && savedArticles.length > 0) {

@@ -49,9 +49,9 @@ async function generateNewsArticles() {
                 console.log('');
             });
             
-            // Сохраняем статьи в HTML файлы
-            console.log('💾 Начинаю сохранение статей в HTML файлы...');
-            await saveAllArticles(news2025, 'news');
+            // Сохраняем статьи в базу данных
+            console.log('💾 Начинаю сохранение статей в базу данных...');
+            await saveAllArticles(news2025);
             
         } else {
             console.log('❌ Не удалось найти подходящие новости для сохранения');
