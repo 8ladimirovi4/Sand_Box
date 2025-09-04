@@ -7,7 +7,7 @@ const { telegramBot } = require('./telegramBot');
  * Сохраняет статью в базу данных
  * @param {Object} article - Объект статьи с href и text
  * @param {number} index - Индекс статьи
- * @returns {Promise<boolean>} Успешность сохранения
+ * @returns {Promise<Object>} Результат сохранения {success: boolean, isNew: boolean, articleData?: Object}
  */
 async function saveArticle(article, index) {
     try {
@@ -17,7 +17,7 @@ async function saveArticle(article, index) {
         const existingArticle = await database.getArticleByUrl(article.href);
         if (existingArticle) {
             console.log(`⚠️  Статья ${index + 1} уже существует в базе данных, пропускаю`);
-            return true;
+            return { success: true, isNew: false };
         }
         
         // Получаем содержимое страницы
@@ -28,7 +28,7 @@ async function saveArticle(article, index) {
         
         if (!articleText || articleText.length < 100) {
             console.log(`⚠️  Статья ${index + 1} слишком короткая или пустая, пропускаю`);
-            return false;
+            return { success: false, isNew: false };
         }
         
         // Сохраняем в базу данных
@@ -41,12 +41,21 @@ async function saveArticle(article, index) {
         
         await database.saveArticle(articleData);
         
-        console.log(`✅ Статья ${index + 1} сохранена в базу данных`);
-        return true;
+        console.log(`✅ Статья ${index + 1} сохранена в базу данных (НОВАЯ)`);
+        return { 
+            success: true, 
+            isNew: true, 
+            articleData: {
+                title: article.text,
+                url: article.href,
+                content: articleText,
+                date: new Date().toLocaleDateString('ru-RU')
+            }
+        };
         
     } catch (error) {
         console.error(`❌ Ошибка при сохранении статьи ${index + 1}:`, error.message);
-        return false;
+        return { success: false, isNew: false };
     }
 }
 
@@ -65,20 +74,21 @@ async function saveAllArticles(articles, sendToTelegram = true) {
     
     let successCount = 0;
     let failCount = 0;
-    const savedArticles = []; // Массив для хранения успешно сохраненных статей
+    let newArticlesCount = 0;
+    const newArticles = []; // Массив для хранения только НОВЫХ статей
     
     // Сохраняем каждую статью
     for (let i = 0; i < articles.length; i++) {
-        const success = await saveArticle(articles[i], i);
-        if (success) {
+        const result = await saveArticle(articles[i], i);
+        
+        if (result.success) {
             successCount++;
-            // Добавляем статью в массив для отправки в Telegram
-            savedArticles.push({
-                title: articles[i].text,
-                url: articles[i].href,
-                content: '', // Будет заполнено позже
-                date: new Date().toLocaleDateString('ru-RU')
-            });
+            
+            // Если статья новая, добавляем её в массив для отправки в Telegram
+            if (result.isNew && result.articleData) {
+                newArticlesCount++;
+                newArticles.push(result.articleData);
+            }
         } else {
             failCount++;
         }
@@ -91,39 +101,20 @@ async function saveAllArticles(articles, sendToTelegram = true) {
     
     console.log('\n📊 Результаты сохранения:');
     console.log(`✅ Успешно сохранено: ${successCount}`);
+    console.log(`🆕 Новых статей: ${newArticlesCount}`);
     console.log(`❌ Ошибок: ${failCount}`);
     
-    // Отправляем новости в Telegram, если есть сохраненные статьи
-    if (sendToTelegram && savedArticles.length > 0) {
-        console.log('\n📱 Отправляю новости в Telegram канал...');
+    // Отправляем в Telegram только НОВЫЕ новости
+    if (sendToTelegram && newArticles.length > 0) {
+        console.log(`\n📱 Отправляю ${newArticles.length} новых новостей в Telegram канал...`);
         try {
             // Инициализируем бота
             const botInitialized = await telegramBot.initialize();
             
             if (botInitialized) {
-                // Получаем полный контент статей из базы данных для отправки
-                const articlesWithContent = [];
-                for (const article of savedArticles) {
-                    try {
-                        const dbArticle = await database.getArticleByUrl(article.url);
-                        if (dbArticle) {
-                            articlesWithContent.push({
-                                title: article.title,
-                                url: article.url,
-                                content: dbArticle.content,
-                                date: article.date
-                            });
-                        }
-                    } catch (error) {
-                        console.error(`⚠️ Не удалось получить контент статьи "${article.title}":`, error.message);
-                        // Отправляем без контента
-                        articlesWithContent.push(article);
-                    }
-                }
-                
-                // Отправляем новости в Telegram
-                await telegramBot.sendMultipleNews(articlesWithContent);
-                console.log('✅ Новости успешно отправлены в Telegram канал');
+                // Отправляем новые новости в Telegram
+                await telegramBot.sendMultipleNews(newArticles);
+                console.log(`✅ ${newArticles.length} новых новостей успешно отправлены в Telegram канал`);
             } else {
                 console.log('⚠️ Не удалось инициализировать Telegram бота, пропускаю отправку');
             }
@@ -137,6 +128,8 @@ async function saveAllArticles(articles, sendToTelegram = true) {
                 console.error('⚠️ Ошибка при закрытии соединения с ботом:', closeError.message);
             }
         }
+    } else if (sendToTelegram && newArticles.length === 0) {
+        console.log('\n📱 Новых новостей для отправки в Telegram не найдено');
     }
 }
 
