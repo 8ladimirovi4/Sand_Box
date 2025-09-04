@@ -5,6 +5,7 @@ const { extractArticleText } = require('./articleProcessor');
 const { createArticleHTML } = require('./htmlGenerator');
 const { ensureNewsFolder } = require('./folderManager');
 const { database } = require('./database');
+const { telegramBot } = require('./telegramBot');
 
 /**
  * Сохраняет статью в HTML файл и базу данных
@@ -73,8 +74,9 @@ async function saveArticle(newsPath, article, index) {
  * Основная функция для сохранения всех статей
  * @param {Array} articles - Массив объектов статей с href и text
  * @param {string} folderName - Название папки (по умолчанию 'news')
+ * @param {boolean} sendToTelegram - Отправлять ли новости в Telegram (по умолчанию true)
  */
-async function saveAllArticles(articles, folderName = 'news') {
+async function saveAllArticles(articles, folderName = 'news', sendToTelegram = true) {
     if (!articles || !Array.isArray(articles) || articles.length === 0) {
         console.log('❌ Нет статей для сохранения');
         return;
@@ -87,12 +89,20 @@ async function saveAllArticles(articles, folderName = 'news') {
     
     let successCount = 0;
     let failCount = 0;
+    const savedArticles = []; // Массив для хранения успешно сохраненных статей
     
     // Сохраняем каждую статью
     for (let i = 0; i < articles.length; i++) {
         const success = await saveArticle(newsPath, articles[i], i);
         if (success) {
             successCount++;
+            // Добавляем статью в массив для отправки в Telegram
+            savedArticles.push({
+                title: articles[i].text,
+                url: articles[i].href,
+                content: '', // Будет заполнено позже
+                date: new Date().toLocaleDateString('ru-RU')
+            });
         } else {
             failCount++;
         }
@@ -107,6 +117,52 @@ async function saveAllArticles(articles, folderName = 'news') {
     console.log(`✅ Успешно сохранено: ${successCount}`);
     console.log(`❌ Ошибок: ${failCount}`);
     console.log(`📁 Файлы сохранены в папку: ${newsPath}`);
+    
+    // Отправляем новости в Telegram, если есть сохраненные статьи
+    if (sendToTelegram && savedArticles.length > 0) {
+        console.log('\n📱 Отправляю новости в Telegram канал...');
+        try {
+            // Инициализируем бота
+            const botInitialized = await telegramBot.initialize();
+            
+            if (botInitialized) {
+                // Получаем полный контент статей из базы данных для отправки
+                const articlesWithContent = [];
+                for (const article of savedArticles) {
+                    try {
+                        const dbArticle = await database.getArticleByUrl(article.url);
+                        if (dbArticle) {
+                            articlesWithContent.push({
+                                title: article.title,
+                                url: article.url,
+                                content: dbArticle.content,
+                                date: article.date
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`⚠️ Не удалось получить контент статьи "${article.title}":`, error.message);
+                        // Отправляем без контента
+                        articlesWithContent.push(article);
+                    }
+                }
+                
+                // Отправляем новости в Telegram
+                await telegramBot.sendMultipleNews(articlesWithContent);
+                console.log('✅ Новости успешно отправлены в Telegram канал');
+            } else {
+                console.log('⚠️ Не удалось инициализировать Telegram бота, пропускаю отправку');
+            }
+        } catch (error) {
+            console.error('❌ Ошибка отправки новостей в Telegram:', error.message);
+        } finally {
+            // Закрываем соединение с ботом
+            try {
+                await telegramBot.close();
+            } catch (closeError) {
+                console.error('⚠️ Ошибка при закрытии соединения с ботом:', closeError.message);
+            }
+        }
+    }
 }
 
 /**
@@ -184,11 +240,65 @@ async function getArticlesStatistics() {
     }
 }
 
+/**
+ * Отправляет все статьи из базы данных в Telegram канал
+ * @param {number} limit - Максимальное количество статей для отправки (по умолчанию 10)
+ */
+async function sendAllArticlesToTelegram(limit = 10) {
+    try {
+        console.log(`📱 Отправляю последние ${limit} статей в Telegram канал...`);
+        
+        // Инициализируем бота
+        const botInitialized = await telegramBot.initialize();
+        
+        if (!botInitialized) {
+            console.log('❌ Не удалось инициализировать Telegram бота');
+            return false;
+        }
+        
+        // Получаем статьи из базы данных
+        const articles = await database.getAllArticles();
+        
+        if (!articles || articles.length === 0) {
+            console.log('❌ Нет статей в базе данных для отправки');
+            return false;
+        }
+        
+        // Берем последние N статей
+        const recentArticles = articles.slice(-limit);
+        
+        // Форматируем статьи для отправки
+        const formattedArticles = recentArticles.map(article => ({
+            title: article.title,
+            url: article.url,
+            content: article.content,
+            date: article.created_at ? new Date(article.created_at).toLocaleDateString('ru-RU') : new Date().toLocaleDateString('ru-RU')
+        }));
+        
+        // Отправляем новости
+        await telegramBot.sendMultipleNews(formattedArticles);
+        console.log('✅ Статьи успешно отправлены в Telegram канал');
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Ошибка отправки статей в Telegram:', error.message);
+        return false;
+    } finally {
+        // Закрываем соединение с ботом
+        try {
+            await telegramBot.close();
+        } catch (closeError) {
+            console.error('⚠️ Ошибка при закрытии соединения с ботом:', closeError.message);
+        }
+    }
+}
+
 module.exports = {
     saveArticle,
     saveAllArticles,
     getAllArticlesFromDB,
     getArticleByIdFromDB,
     deleteArticleFromDB,
-    getArticlesStatistics
+    getArticlesStatistics,
+    sendAllArticlesToTelegram
 };

@@ -19,7 +19,8 @@ Sand_Box/
 │   ├── articleSaver.js         # Сохранение статей
 │   ├── newsGenerator.js        # Основная логика генерации новостей
 │   ├── database.js             # Управление базой данных SQLite
-│   └── dbManager.js            # Менеджер базы данных
+│   ├── dbManager.js            # Менеджер базы данных
+│   └── telegramBot.js          # Telegram бот для отправки новостей
 ├── news/                       # Папка с HTML файлами статей
 ├── img_test/                   # Папка для изображений
 ├── news_articles.db            # База данных SQLite
@@ -27,7 +28,9 @@ Sand_Box/
 ├── README.md                   # Этот файл
 ├── API.md                      # Документация API
 ├── db-cli.js                   # CLI для работы с БД
-└── example-usage.js            # Примеры использования
+├── example-usage.js            # Примеры использования
+├── .env.example                # Пример файла с переменными окружения
+└── TELEGRAM_SETUP.md           # Инструкция по настройке Telegram бота
 ```
 
 ## Основной файл
@@ -88,6 +91,15 @@ Sand_Box/
 - `getTopArticlesByWordCount()` - топ статей по количеству слов
 - `updateArticle()` - обновление статьи
 
+### `utils/telegramBot.js`
+
+- `TelegramBotManager` - класс для работы с Telegram ботом
+- `initialize()` - инициализация бота
+- `sendMessage()` - отправка текстового сообщения
+- `sendNewsArticle()` - отправка новостной статьи
+- `sendMultipleNews()` - отправка нескольких новостей
+- `formatNewsMessage()` - форматирование сообщения для Telegram
+
 ## Запуск
 
 ### Основное приложение
@@ -121,6 +133,9 @@ npm run db top 5
 # Удалить статью
 npm run db delete 1
 
+# Отправить статьи в Telegram канал
+npm run db telegram 10
+
 # Показать справку
 npm run db help
 ```
@@ -142,7 +157,8 @@ node example-usage.js
 5. ✅ Ищутся новости 2025 года
 6. ✅ Создается папка `news` (если не существует)
 7. ✅ Каждая новость сохраняется в отдельный HTML файл И в базу данных
-8. ✅ Показывается статистика по базе данных
+8. ✅ Новости автоматически отправляются в Telegram канал (если настроен)
+9. ✅ Показывается статистика по базе данных
 
 ## Результат
 
@@ -166,6 +182,7 @@ node example-usage.js
 - 🚫 **Избежание дублирования** - проверка на существующие статьи
 - 🛠️ **CLI интерфейс** - удобное управление базой данных из командной строки
 - 📈 **Аналитика** - топ статей по количеству слов, фильтрация по датам
+- 📱 **Telegram интеграция** - автоматическая отправка новостей в Telegram канал
 
 ## Преимущества модульной структуры
 
@@ -179,6 +196,8 @@ node example-usage.js
 
 - `jsdom` - для парсинга HTML
 - `sqlite3` - для работы с базой данных SQLite
+- `node-telegram-bot-api` - для работы с Telegram Bot API
+- `dotenv` - для загрузки переменных окружения
 - `https` - для HTTP запросов
 - `fs` - для работы с файлами
 - `path` - для работы с путями
@@ -189,7 +208,19 @@ node example-usage.js
 npm install
 ```
 
+## Настройка Telegram бота
+
+Для отправки новостей в Telegram канал необходимо:
+
+1. Создать бота через [@BotFather](https://t.me/botfather)
+2. Создать канал и добавить бота как администратора
+3. Создать файл `.env` на основе `.env.example`
+4. Заполнить переменные `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHANNEL_ID`
+
+Подробная инструкция: [TELEGRAM_SETUP.md](TELEGRAM_SETUP.md)
+
 ## Документация
 
 - [README.md](README.md) - Основная документация
 - [API.md](API.md) - Документация API базы данных
+- [TELEGRAM_SETUP.md](TELEGRAM_SETUP.md) - Настройка Telegram бота

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { dbManager } = require('./utils/dbManager');
+const { sendAllArticlesToTelegram } = require('./utils/articleSaver');
 
 /**
  * CLI интерфейс для работы с базой данных статей
@@ -14,6 +15,7 @@ class DatabaseCLI {
             'stats': this.showStatistics.bind(this),
             'search': this.searchArticles.bind(this),
             'top': this.showTopArticles.bind(this),
+            'telegram': this.sendToTelegram.bind(this),
             'help': this.showHelp.bind(this)
         };
     }
@@ -29,12 +31,14 @@ class DatabaseCLI {
         console.log('  stats                  - Показать статистику');
         console.log('  search <query>         - Поиск статей');
         console.log('  top [limit]            - Топ статей по количеству слов');
+        console.log('  telegram [limit]       - Отправить статьи в Telegram канал');
         console.log('  help                   - Показать эту справку');
         console.log('\nПримеры:');
         console.log('  node db-cli.js list');
         console.log('  node db-cli.js show 1');
         console.log('  node db-cli.js search "AI"');
         console.log('  node db-cli.js top 5');
+        console.log('  node db-cli.js telegram 10');
     }
 
     /**
@@ -200,6 +204,32 @@ class DatabaseCLI {
             });
         } catch (error) {
             console.error('❌ Ошибка получения топ статей:', error.message);
+        }
+    }
+
+    /**
+     * Отправляет статьи в Telegram канал
+     * @param {string} limit - Количество статей для отправки (по умолчанию 10)
+     */
+    async sendToTelegram(limit = '10') {
+        try {
+            const limitNum = parseInt(limit);
+            if (isNaN(limitNum) || limitNum <= 0) {
+                console.log('❌ Некорректное количество статей. Используйте положительное число.');
+                return;
+            }
+
+            console.log(`📱 Отправляю последние ${limitNum} статей в Telegram канал...`);
+            
+            const success = await sendAllArticlesToTelegram(limitNum);
+            
+            if (success) {
+                console.log('✅ Статьи успешно отправлены в Telegram канал');
+            } else {
+                console.log('❌ Не удалось отправить статьи в Telegram канал');
+            }
+        } catch (error) {
+            console.error('❌ Ошибка отправки в Telegram:', error.message);
         }
     }
 
