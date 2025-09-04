@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "db": "node db-cli.js",
+    "example": "node example-usage.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -15,6 +17,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "jsdom": "^24.0.0"
+    "jsdom": "^24.0.0",
+    "sqlite3": "^5.1.7"
   }
 }
