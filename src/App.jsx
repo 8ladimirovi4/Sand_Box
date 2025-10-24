@@ -1,17 +1,9 @@
-
-import React from 'react';
-import DockMenu from './components/Menue/DockMenu';
-
-
-
-
-
-
+import { MultiSelectComponent } from "./components/Multiselect/Multiselect"
 
 function App() {
 
   return (
-<DockMenu/>
+<MultiSelectComponent/>
   )
 }
 
