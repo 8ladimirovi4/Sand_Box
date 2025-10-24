@@ -1,6 +1,16 @@
 .app {
-  min-height: 100vh;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
   background-color: #f8f9fa;
+  overflow: hidden;
+}
+
+/* Убираем отступы по умолчанию для body и html */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
 
 .message-list {
