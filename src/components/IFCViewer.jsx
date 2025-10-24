@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { IFCLoader } from 'web-ifc-three/IFCLoader';
+import { IFCLoader } from 'web-ifc-three';
 import * as THREE from 'three';
 
 const IFCViewer = ({ onModelLoaded }) => {

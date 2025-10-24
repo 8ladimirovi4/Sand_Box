@@ -22,6 +22,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'primereact']
-  }
+    include: ['react', 'react-dom', 'primereact', 'web-ifc', 'web-ifc-three']
+  },
+  assetsInclude: ['**/*.wasm']
 })
