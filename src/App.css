@@ -1,0 +1,61 @@
+.app {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.message-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.message-item {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.message-item:hover {
+  background-color: #f8f9fa;
+  border-color: #007ad9;
+}
+
+.datatable-responsive {
+  width: 100%;
+}
+
+/* Кастомные стили для улучшения внешнего вида */
+.p-card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.p-panel {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.p-menubar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.p-menubar .p-menuitem-link {
+  color: white;
+}
+
+.p-menubar .p-menuitem-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .grid {
+    margin: 0;
+  }
+  
+  .col-12 {
+    padding: 0.5rem;
+  }
+}
