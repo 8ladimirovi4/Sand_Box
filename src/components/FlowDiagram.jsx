@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -10,14 +10,29 @@ import {
 } from '@xyflow/react';
 import IFCViewer from './IFCViewer';
 import IFCNode from './IFCNode';
+import MetadataNode from './MetadataNode';
 import '@xyflow/react/dist/style.css';
 
 const initialNodes = [
   {
     id: 'ifc-1',
     type: 'ifcNode',
-    data: { label: 'IFC Модель' },
-    position: { x: 400, y: 200 },
+    data: { 
+      label: 'IFC Модель',
+      onMetadataClick: null // Будет установлено в useEffect
+    },
+    position: { x: 200, y: 200 },
+  },
+  {
+    id: 'metadata-1',
+    type: 'metadataNode',
+    data: { 
+      label: 'Метаданные',
+      metadata: null,
+      isLoading: false,
+      error: null
+    },
+    position: { x: 600, y: 200 },
   },
 ];
 
@@ -26,6 +41,7 @@ const initialEdges = [];
 // Определение типов узлов
 const nodeTypes = {
   ifcNode: IFCNode,
+  metadataNode: MetadataNode,
 };
 
 function FlowDiagram() {
@@ -43,6 +59,85 @@ function FlowDiagram() {
     setIfcModel(model);
     console.log('IFC модель загружена:', model);
   };
+
+  const updateMetadata = (metadata) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === 'metadata-1') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              metadata: metadata,
+              isLoading: false,
+              error: null
+            }
+          };
+        }
+        return node;
+      })
+    );
+  };
+
+  const setMetadataLoading = (isLoading) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === 'metadata-1') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isLoading: isLoading
+            }
+          };
+        }
+        return node;
+      })
+    );
+  };
+
+  const setMetadataError = (error) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === 'metadata-1') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              error: error,
+              isLoading: false
+            }
+          };
+        }
+        return node;
+      })
+    );
+  };
+
+  // Устанавливаем обработчик клика для IFCNode
+  useEffect(() => {
+    const handleMetadataClick = (metadata) => {
+      setMetadataLoading(true);
+      setTimeout(() => {
+        updateMetadata(metadata);
+      }, 500); // Небольшая задержка для демонстрации загрузки
+    };
+
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === 'ifc-1') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onMetadataClick: handleMetadataClick
+            }
+          };
+        }
+        return node;
+      })
+    );
+  }, []);
 
   const toggleView = () => {
     setShowIFCViewer(!showIFCViewer);

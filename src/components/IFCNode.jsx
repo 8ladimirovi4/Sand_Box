@@ -13,6 +13,7 @@ const IFCNode = ({ data, isConnectable }) => {
   const [error, setError] = useState(null);
   const [hasModel, setHasModel] = useState(false);
   const [model, setModel] = useState(null);
+  const [metadata, setMetadata] = useState(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -94,6 +95,9 @@ const IFCNode = ({ data, isConnectable }) => {
       setModel(ifcModel);
       setHasModel(true);
       
+      // Извлекаем метаданные
+      const extractedMetadata = await extractMetadata(ifcModel);
+      
       // Центрируем камеру на модели
       const box = new THREE.Box3().setFromObject(ifcModel);
       const center = box.getCenter(new THREE.Vector3());
@@ -121,6 +125,112 @@ const IFCNode = ({ data, isConnectable }) => {
       sceneRef.current.remove(model);
       setModel(null);
       setHasModel(false);
+      setMetadata(null);
+    }
+  };
+
+  const extractMetadata = async (ifcModel) => {
+    try {
+      const metadata = {
+        name: 'IFC Модель',
+        description: 'Загруженная IFC модель',
+        elementCount: 0,
+        typeCount: 0,
+        materials: {},
+        properties: {},
+        project: {
+          name: 'IFC Проект',
+          description: 'Загруженный IFC файл'
+        }
+      };
+
+      // Подсчитываем элементы и собираем информацию
+      const types = new Set();
+      const materials = new Set();
+      
+      ifcModel.traverse((child) => {
+        if (child.isMesh) {
+          metadata.elementCount++;
+          
+          // Собираем информацию о материалах
+          if (child.material) {
+            const materialName = child.material.name || 'Материал без названия';
+            materials.add(materialName);
+            
+            if (!metadata.materials[materialName]) {
+              metadata.materials[materialName] = 0;
+            }
+            metadata.materials[materialName]++;
+          }
+          
+          // Собираем типы элементов
+          if (child.userData && child.userData.ifcType) {
+            types.add(child.userData.ifcType);
+          }
+        }
+      });
+
+      metadata.typeCount = types.size;
+      metadata.materialCount = materials.size;
+
+      // Получаем размер файла из userData модели
+      if (ifcModel.userData && ifcModel.userData.fileSize) {
+        metadata.fileSize = ifcModel.userData.fileSize;
+      }
+
+      // Добавляем информацию о геометрии
+      const box = new THREE.Box3().setFromObject(ifcModel);
+      const size = box.getSize(new THREE.Vector3());
+      metadata.dimensions = {
+        width: size.x.toFixed(2),
+        height: size.y.toFixed(2),
+        depth: size.z.toFixed(2)
+      };
+
+      // Добавляем статистику
+      metadata.statistics = {
+        totalElements: metadata.elementCount,
+        uniqueTypes: metadata.typeCount,
+        uniqueMaterials: metadata.materialCount,
+        boundingBox: metadata.dimensions
+      };
+
+      // Добавляем единицы измерения (по умолчанию метры)
+      metadata.units = {
+        length: 'метры',
+        area: 'квадратные метры',
+        volume: 'кубические метры',
+        angle: 'градусы'
+      };
+
+      setMetadata(metadata);
+      return metadata;
+    } catch (error) {
+      console.error('Ошибка извлечения метаданных:', error);
+      
+      // Возвращаем базовые метаданные даже при ошибке
+      const fallbackMetadata = {
+        name: 'IFC Модель',
+        description: 'Загруженная IFC модель',
+        elementCount: 0,
+        typeCount: 0,
+        materials: {},
+        properties: {},
+        project: {
+          name: 'IFC Проект',
+          description: 'Загруженный IFC файл'
+        },
+        error: 'Не удалось извлечь полные метаданные'
+      };
+      
+      setMetadata(fallbackMetadata);
+      return fallbackMetadata;
+    }
+  };
+
+  const handleModelClick = () => {
+    if (metadata && data.onMetadataClick) {
+      data.onMetadataClick(metadata);
     }
   };
 
@@ -201,14 +311,17 @@ const IFCNode = ({ data, isConnectable }) => {
       {/* Контейнер для 3D превью */}
       <div 
         ref={containerRef} 
+        onClick={handleModelClick}
         style={{ 
           width: '200px', 
           height: '150px',
           border: '1px solid #ddd',
           borderRadius: '4px',
           overflow: 'hidden',
-          margin: '0 auto'
+          margin: '0 auto',
+          cursor: hasModel ? 'pointer' : 'default'
         }} 
+        title={hasModel ? 'Кликните для просмотра метаданных' : ''}
       />
       
       <Handle
