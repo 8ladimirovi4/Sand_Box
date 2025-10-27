@@ -1,7 +1,74 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { IFCLoader } from 'web-ifc-three';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+// === НОВЫЙ РЕКУРСИВНЫЙ КОМПОНЕНТ ДЛЯ УЗЛА ДЕРЕВА ===
+const TreeNode = ({ node, onToggleVisibility, visibleMap, onToggleExpand, expandedSet }) => {
+  if (!node) return null;
+
+  const isExpanded = expandedSet.has(node.id);
+  const hasChildren = node.children && node.children.length > 0;
+
+  // Определяем, видим ли сам узел (и все его дочерние меши)
+  const isChecked = (() => {
+    if (!node.expressID || !visibleMap.expressIDToUUID) return true;
+    const uuids = visibleMap.expressIDToUUID.get(String(node.expressID));
+    if (!uuids || uuids.length === 0) return true; // Если нет мешей, считаем видимым
+    return uuids.every(uuid => visibleMap.visibility.get(uuid) !== false);
+  })();
+
+  return (
+    <div style={{ paddingLeft: `${node.level > 0 ? 15 : 0}px` }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px', padding: '2px 0' }}>
+        {/* Кнопка для сворачивания/разворачивания */}
+        <div 
+          style={{ width: '15px', cursor: hasChildren ? 'pointer' : 'default', userSelect: 'none' }}
+          onClick={() => hasChildren && onToggleExpand(node.id)}
+        >
+          {hasChildren ? (isExpanded ? '▼' : '►') : ''}
+        </div>
+        
+        {/* Чекбокс видимости */}
+        <input
+          type="checkbox"
+          checked={isChecked}
+          onChange={(e) => onToggleVisibility(node, e.target.checked)}
+          style={{ marginRight: '8px', cursor: 'pointer' }}
+        />
+        
+        {/* Имя элемента */}
+        <label style={{ 
+          fontSize: '12px', 
+          color: node.level === 0 ? '#333' : '#666', 
+          fontWeight: node.level === 0 ? 'bold' : 'normal',
+          cursor: 'pointer',
+          flex: 1,
+          wordBreak: 'break-word'
+        }}>
+          {node.type ? `${node.type} ` : ''}{node.name || `Element ${node.id}`}
+        </label>
+      </div>
+      
+      {/* Рендеринг дочерних элементов, если узел раскрыт */}
+      {isExpanded && hasChildren && (
+        <div>
+          {node.children.map(child => (
+            <TreeNode 
+              key={child.id}
+              node={child}
+              onToggleVisibility={onToggleVisibility}
+              visibleMap={visibleMap}
+              onToggleExpand={onToggleExpand}
+              expandedSet={expandedSet}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 const IFCViewer = ({ onModelLoaded }) => {
   const containerRef = useRef(null);
@@ -17,12 +84,23 @@ const IFCViewer = ({ onModelLoaded }) => {
   const selectedElementRef = useRef(null);
   const modelIDRef = useRef(null);
   
+  // Карта для всех мешей модели по их UUID
+  const meshMapRef = useRef(new Map());
+  // Карта для связи expressID с UUID мешей
+  const expressIDToUUIDMapRef = useRef(new Map());
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedElement, setSelectedElement] = useState(null);
   const [elementProperties, setElementProperties] = useState(null);
+  
+  // === ИЗМЕНЕННЫЕ СОСТОЯНИЯ ДЛЯ ДЕРЕВА ===
+  const [modelTree, setModelTree] = useState(null); // Хранит все дерево, а не плоский список
+  const [meshVisibilityMap, setMeshVisibilityMap] = useState(new Map()); // Видимость каждого меша
+  const [expandedNodes, setExpandedNodes] = useState(new Set()); // ID раскрытых узлов
 
-  useEffect(() => {
+  // ... (весь useEffect для инициализации сцены остается без изменений)
+    useEffect(() => {
     if (!containerRef.current) return;
 
     // Создание сцены
@@ -87,107 +165,24 @@ const IFCViewer = ({ onModelLoaded }) => {
       raycaster.setFromCamera(mouseRef.current, camera);
       
       if (ifcModelRef.current) {
-        // Получаем все meshes из модели
-        const allMeshes = [];
-        ifcModelRef.current.traverse((child) => {
-          if (child.isMesh) {
-            allMeshes.push(child);
-          }
-        });
-        
-        console.log('Raycasting against', allMeshes.length, 'meshes');
-        
-        const intersects = raycaster.intersectObjects(allMeshes.length > 0 ? allMeshes : [ifcModelRef.current], true);
-        
-        console.log('Intersects found:', intersects.length);
+        const intersects = raycaster.intersectObjects([ifcModelRef.current], true);
         
         if (intersects.length > 0) {
           const intersection = intersects[0];
-          
-          console.log('Intersected object:', intersection.object);
-          console.log('Face index:', intersection.faceIndex);
-          
-          try {
-            let expressID = null;
-            
-            // Попытка получить Express ID из атрибутов геометрии
-            // Правильный способ согласно реализации web-ifc-three
-            if (intersection.object.geometry?.attributes) {
-              const attrs = intersection.object.geometry.attributes;
-              console.log('Available attributes:', Object.keys(attrs));
-              
-              // Ищем атрибут expressID (может быть с разными именами)
-              const idAttr = attrs.expressID || attrs.id || attrs.IFC;
-              
-              if (idAttr && intersection.object.geometry.index) {
-                console.log('Getting expressID from geometry using faceIndex');
-                const geoIndex = intersection.object.geometry.index.array;
-                const vertexIndex = geoIndex[3 * intersection.faceIndex];
-                expressID = idAttr.getX(vertexIndex);
-                console.log('Express ID from geometry:', expressID, 'vertexIndex:', vertexIndex);
+          const expressID = ifcLoader.ifcManager.getExpressId(intersection.object.geometry, intersection.faceIndex);
+
+          if (expressID !== undefined) {
+             try {
+                const props = await ifcLoader.ifcManager.getItemProperties(modelIDRef.current, expressID);
+                setElementProperties(props);
+                setSelectedElement({ expressID, ...props });
+              } catch (err) {
+                console.error('Error getting properties:', err);
+                setElementProperties(null);
+                setSelectedElement(null);
               }
-            }
-            
-            // Альтернативный способ - получение Express ID через userData
-            if (!expressID && intersection.object.userData?.expressID) {
-              console.log('Getting expressID from userData');
-              expressID = intersection.object.userData.expressID;
-            }
-
-            // Еще один способ - через геометрию напрямую
-            if (!expressID && intersection.object.geometry) {
-              try {
-                console.log('Attempting to get expressID via IFCManager');
-                // Используем метод IFCManager для получения Express ID
-                const geom = intersection.object.geometry;
-                if (ifcLoader.ifcManager.getExpressId) {
-                  expressID = ifcLoader.ifcManager.getExpressId(geom, intersection.faceIndex);
-                  console.log('Express ID from IFCManager:', expressID);
-                }
-              } catch (e) {
-                console.log('Alternative express ID retrieval failed:', e);
-              }
-            }
-
-            console.log('Final Express ID:', expressID);
-            console.log('Model ID:', modelIDRef.current);
-
-            // Сбрасываем предыдущую подсветку
-            if (selectedElementRef.current) {
-             // selectedElementRef.current.material.emissive.setHex(0x000000);
-            }
-
-            // Подсвечиваем выбранный элемент
-            if (intersection.object.material) {
-             // intersection.object.material.emissive.setHex(0x00ff00);
-              selectedElementRef.current = intersection.object;
-
-              // Получаем свойства элемента
-              if (expressID && modelIDRef.current !== null) {
-                try {
-                  const props = await ifcLoader.ifcManager.getItemProperties(modelIDRef.current, expressID);
-                  console.log('Element properties:', props);
-                  setElementProperties(props);
-                  setSelectedElement({
-                    expressID,
-                    type: props.type || 'Unknown',
-                    ...props
-                  });
-                } catch (err) {
-                  console.error('Error getting properties:', err);
-                  setElementProperties(null);
-                  setSelectedElement(null);
-                }
-              }
-            }
-          } catch (error) {
-            console.error('Error processing click:', error);
           }
         } else {
-          // Клик по пустому пространству
-          if (selectedElementRef.current) {
-           // selectedElementRef.current.material.emissive.setHex(0x000000);
-          }
           setSelectedElement(null);
           setElementProperties(null);
         }
@@ -196,7 +191,6 @@ const IFCViewer = ({ onModelLoaded }) => {
 
     renderer.domElement.addEventListener('click', onMouseClick);
 
-    // Функция анимации
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -204,7 +198,6 @@ const IFCViewer = ({ onModelLoaded }) => {
     };
     animate();
 
-    // Обработка изменения размера окна
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -212,7 +205,6 @@ const IFCViewer = ({ onModelLoaded }) => {
     };
     window.addEventListener('resize', handleResize);
 
-    // Очистка при размонтировании
     return () => {
       window.removeEventListener('resize', handleResize);
       renderer.domElement.removeEventListener('click', onMouseClick);
@@ -234,68 +226,82 @@ const IFCViewer = ({ onModelLoaded }) => {
     try {
       const url = URL.createObjectURL(file);
       
-      // Удаляем предыдущую модель если есть
       if (ifcModelRef.current) {
         sceneRef.current.remove(ifcModelRef.current);
         ifcModelRef.current = null;
       }
-
-      // Сбрасываем выбор
-      if (selectedElementRef.current) {
-        selectedElementRef.current.material.emissive.setHex(0x000000);
-      }
       setSelectedElement(null);
       setElementProperties(null);
+      setModelTree(null);
       
-      // Загружаем IFC модель
       const ifcModel = await ifcLoaderRef.current.loadAsync(url);
-      
-      // Сохраняем ссылку на модель
       ifcModelRef.current = ifcModel;
-      
-      // Сохраняем ID модели
       modelIDRef.current = ifcModel.modelID;
       
-      // Выводим структуру модели для отладки
-      console.log('=== IFC Model Structure ===');
-      console.log('Model ID:', ifcModel.modelID);
-      console.log('Model children count:', ifcModel.children.length);
-      console.log('Model type:', ifcModel.type);
+      const meshMap = new Map();
+      const visibilityMap = new Map();
+      const expressIDMap = new Map();
       
-      // Логируем все дети модели
       ifcModel.traverse((child) => {
         if (child.isMesh) {
-          console.log('Mesh found:', child.name, 'Type:', child.type);
-          if (child.geometry) {
-            console.log('  - Geometry has attributes:', Object.keys(child.geometry.attributes));
-          }
-          if (child.userData) {
-            console.log('  - userData:', child.userData);
-          }
+          meshMap.set(child.uuid, child);
+          visibilityMap.set(child.uuid, true);
+          
+          const ids = child.geometry.attributes.expressID.array;
+          const uniqueIds = [...new Set(ids)];
+          uniqueIds.forEach(id => {
+            if (!expressIDMap.has(String(id))) {
+              expressIDMap.set(String(id), []);
+            }
+            expressIDMap.get(String(id)).push(child.uuid);
+          });
         }
       });
       
-      // Добавляем модель в сцену
+      meshMapRef.current = meshMap;
+      expressIDToUUIDMapRef.current = expressIDMap;
+      setMeshVisibilityMap(visibilityMap);
+      
+      const spatialStructure = await ifcLoaderRef.current.ifcManager.getSpatialStructure(ifcModel.modelID, true);
+      
+      const buildTree = (item, level = 0) => {
+        const type = item.type.replace('IFC', '');
+        let name = '';
+        if (item.Name) name = item.Name.value;
+        else if (item.LongName) name = item.LongName.value;
+        
+        const node = {
+          id: String(item.expressID),
+          name: name || type,
+          type: type,
+          expressID: item.expressID,
+          level: level,
+          children: item.children.map(child => buildTree(child, level + 1))
+        };
+        return node;
+      };
+      
+      const tree = buildTree(spatialStructure);
+      setModelTree(tree);
+      
+      // Раскрываем корневой элемент по умолчанию
+      setExpandedNodes(new Set([tree.id]));
+
       sceneRef.current.add(ifcModel);
       
-      // Центрируем камеру на модели
       const box = new THREE.Box3().setFromObject(ifcModel);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
       const fov = cameraRef.current.fov * (Math.PI / 180);
       let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-      cameraZ *= 1.5; // Добавляем отступ
+      cameraZ *= 1.5;
 
-      cameraRef.current.position.set(center.x, center.y, cameraZ);
-      cameraRef.current.lookAt(center);
+      cameraRef.current.position.set(center.x, center.y, center.z + cameraZ);
+      controlsRef.current.target.copy(center);
+      controlsRef.current.update();
 
-      // Уведомляем родительский компонент о загрузке модели
-      if (onModelLoaded) {
-        onModelLoaded(ifcModel);
-      }
-
-      // Освобождаем URL
+      if (onModelLoaded) onModelLoaded(ifcModel);
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Ошибка загрузки IFC файла:', err);
@@ -305,10 +311,51 @@ const IFCViewer = ({ onModelLoaded }) => {
     }
   };
 
+  // === НОВАЯ ФУНКЦИЯ ДЛЯ ИЕРАРХИЧЕСКОГО ПЕРЕКЛЮЧЕНИЯ ВИДИМОСТИ ===
+  const toggleElementVisibility = useCallback((node, checked) => {
+    const visibilityMap = new Map(meshVisibilityMap);
+    const expressIDMap = expressIDToUUIDMapRef.current;
+    
+    // Рекурсивная функция для применения видимости
+    const applyVisibility = (currentNode) => {
+      const nodeID = String(currentNode.expressID);
+      if (expressIDMap.has(nodeID)) {
+        const uuids = expressIDMap.get(nodeID);
+        uuids.forEach(uuid => {
+          const mesh = meshMapRef.current.get(uuid);
+          if (mesh) {
+            mesh.visible = checked;
+            visibilityMap.set(uuid, checked);
+          }
+        });
+      }
+      // Применяем то же состояние для всех дочерних элементов
+      if (currentNode.children) {
+        currentNode.children.forEach(child => applyVisibility(child));
+      }
+    };
+    
+    applyVisibility(node);
+    setMeshVisibilityMap(visibilityMap);
+  }, [meshVisibilityMap]);
+
+  // Функция для сворачивания/разворачивания узлов
+  const handleToggleExpand = useCallback((nodeId) => {
+    setExpandedNodes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
+  }, []);
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {/* Панель загрузки файла */}
-      <div style={{
+      {/* ... (панель загрузки файла остается без изменений) */}
+        <div style={{
         position: 'absolute',
         top: '20px',
         left: '20px',
@@ -338,11 +385,42 @@ const IFCViewer = ({ onModelLoaded }) => {
         )}
       </div>
 
+      {/* === ОБНОВЛЕННАЯ ПАНЕЛЬ ДЕРЕВА ЭЛЕМЕНТОВ === */}
+      {modelTree && (
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          left: '20px',
+          width: '320px',
+          maxHeight: '50%',
+          overflowY: 'auto',
+          zIndex: 1000,
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '15px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ margin: '0 0 15px 0', fontSize: '16px' }}>Элементы модели</h3>
+          <div style={{ maxHeight: 'calc(50vh - 80px)', overflowY: 'auto' }}>
+            <TreeNode 
+              node={modelTree}
+              onToggleVisibility={toggleElementVisibility}
+              visibleMap={{
+                visibility: meshVisibilityMap,
+                expressIDToUUID: expressIDToUUIDMapRef.current
+              }}
+              onToggleExpand={handleToggleExpand}
+              expandedSet={expandedNodes}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Контейнер для 3D сцены */}
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Панель свойств элемента */}
-      {elementProperties && (
+      {/* ... (панель свойств остается без изменений) */}
+       {elementProperties && (
         <div style={{
           position: 'absolute',
           top: '20px',
@@ -362,9 +440,6 @@ const IFCViewer = ({ onModelLoaded }) => {
               onClick={() => {
                 setElementProperties(null);
                 setSelectedElement(null);
-                if (selectedElementRef.current) {
-                  selectedElementRef.current.material.emissive.setHex(0x000000);
-                }
               }}
               style={{
                 background: 'none',
@@ -389,7 +464,7 @@ const IFCViewer = ({ onModelLoaded }) => {
   );
 };
 
-// Функция для отображения свойств объекта
+// ... (функция renderProperties остается без изменений)
 const renderProperties = (obj, depth = 0) => {
   if (!obj || typeof obj !== 'object') {
     return <span>{String(obj)}</span>;
@@ -430,5 +505,6 @@ const renderProperties = (obj, depth = 0) => {
     );
   }).filter(Boolean);
 };
+
 
 export default IFCViewer;
