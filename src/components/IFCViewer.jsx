@@ -1,196 +1,90 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { IFCLoader } from 'web-ifc-three';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+// IFCViewer.jsx
+import React, { useEffect, useRef, useState, Fragment } from "react";
+import * as THREE from "three";
+import { IFCLoader } from "web-ifc-three/IFCLoader";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
-// === НОВЫЙ РЕКУРСИВНЫЙ КОМПОНЕНТ ДЛЯ УЗЛА ДЕРЕВА ===
-const TreeNode = ({ node, onToggleVisibility, visibleMap, onToggleExpand, expandedSet }) => {
-  if (!node) return null;
+const HIGHLIGHT_MATERIAL = new THREE.MeshBasicMaterial({
+  color: 0x00ff00,
+  transparent: true,
+  opacity: 0.45,
+  depthTest: false,
+});
 
-  const isExpanded = expandedSet.has(node.id);
-  const hasChildren = node.children && node.children.length > 0;
-
-  // Определяем, видим ли сам узел (и все его дочерние меши)
-  const isChecked = (() => {
-    if (!node.expressID || !visibleMap.expressIDToUUID) return true;
-    const uuids = visibleMap.expressIDToUUID.get(String(node.expressID));
-    if (!uuids || uuids.length === 0) return true; // Если нет мешей, считаем видимым
-    return uuids.every(uuid => visibleMap.visibility.get(uuid) !== false);
-  })();
-
-  return (
-    <div style={{ paddingLeft: `${node.level > 0 ? 15 : 0}px` }}>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px', padding: '2px 0' }}>
-        {/* Кнопка для сворачивания/разворачивания */}
-        <div 
-          style={{ width: '15px', cursor: hasChildren ? 'pointer' : 'default', userSelect: 'none' }}
-          onClick={() => hasChildren && onToggleExpand(node.id)}
-        >
-          {hasChildren ? (isExpanded ? '▼' : '►') : ''}
-        </div>
-        
-        {/* Чекбокс видимости */}
-        <input
-          type="checkbox"
-          checked={isChecked}
-          onChange={(e) => onToggleVisibility(node, e.target.checked)}
-          style={{ marginRight: '8px', cursor: 'pointer' }}
-        />
-        
-        {/* Имя элемента */}
-        <label style={{ 
-          fontSize: '12px', 
-          color: node.level === 0 ? '#333' : '#666', 
-          fontWeight: node.level === 0 ? 'bold' : 'normal',
-          cursor: 'pointer',
-          flex: 1,
-          wordBreak: 'break-word'
-        }}>
-          {node.type ? `${node.type} ` : ''}{node.name || `Element ${node.id}`}
-        </label>
-      </div>
-      
-      {/* Рендеринг дочерних элементов, если узел раскрыт */}
-      {isExpanded && hasChildren && (
-        <div>
-          {node.children.map(child => (
-            <TreeNode 
-              key={child.id}
-              node={child}
-              onToggleVisibility={onToggleVisibility}
-              visibleMap={visibleMap}
-              onToggleExpand={onToggleExpand}
-              expandedSet={expandedSet}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-
-const IFCViewer = ({ onModelLoaded }) => {
+const IFCViewer = ({
+  wasmPath = "/wasm/",
+  onModelLoaded,
+}) => {
+  // Refs для three и загрузчика
   const containerRef = useRef(null);
-  const inputRef = useRef(null);
-  const sceneRef = useRef(null);
   const rendererRef = useRef(null);
+  const sceneRef = useRef(null);
   const cameraRef = useRef(null);
-  const ifcLoaderRef = useRef(null);
   const controlsRef = useRef(null);
+  const ifcLoaderRef = useRef(null);
   const raycasterRef = useRef(null);
   const mouseRef = useRef(new THREE.Vector2());
-  const ifcModelRef = useRef(null);
-  const selectedElementRef = useRef(null);
-  const modelIDRef = useRef(null);
-  
-  // Карта для всех мешей модели по их UUID
-  const meshMapRef = useRef(new Map());
-  // Карта для связи expressID с UUID мешей
-  const expressIDToUUIDMapRef = useRef(new Map());
+  const modelRef = useRef(null);
+  const selectedSubsetRef = useRef(null);
 
+  // Карты для быстрого доступа
+  const meshMapRef = useRef(new Map()); // uuid -> mesh
+  const expressToUUIDsRef = useRef(new Map()); // expressID -> [uuids]
+
+  // Состояния UI
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedElement, setSelectedElement] = useState(null);
-  const [elementProperties, setElementProperties] = useState(null);
-  
-  // === ИЗМЕНЕННЫЕ СОСТОЯНИЯ ДЛЯ ДЕРЕВА ===
-  const [modelTree, setModelTree] = useState(null); // Хранит все дерево, а не плоский список
-  const [meshVisibilityMap, setMeshVisibilityMap] = useState(new Map()); // Видимость каждого меша
-  const [expandedNodes, setExpandedNodes] = useState(new Set()); // ID раскрытых узлов
+  const [treeRoot, setTreeRoot] = useState(null);
+  const [expandedIds, setExpandedIds] = useState({});
+  const [meshVisibilityMap, setMeshVisibilityMap] = useState({});
+  const [selectedProps, setSelectedProps] = useState(null);
+  const [selectedExpressId, setSelectedExpressId] = useState(null);
 
-  // ... (весь useEffect для инициализации сцены остается без изменений)
-    useEffect(() => {
+  // Инициализация сцены, камеры, рендера, IFCLoader
+  useEffect(() => {
     if (!containerRef.current) return;
 
-    // Создание сцены
+    // Сцена и камера
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
     sceneRef.current = scene;
 
-    // Создание камеры
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
+    const camera = new THREE.PerspectiveCamera(60, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
     camera.position.set(10, 10, 10);
-    camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
-    // Создание рендерера
+    // Рендерер
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     rendererRef.current = renderer;
     containerRef.current.appendChild(renderer.domElement);
 
-    // Настройка освещения
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
+    // Свет
+    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambient);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(10, 10, 5);
+    dir.castShadow = true;
+    scene.add(dir);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(10, 10, 5);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
-    scene.add(directionalLight);
-
-    // Инициализация IFCLoader
-    const ifcLoader = new IFCLoader();
-    ifcLoader.ifcManager.setWasmPath('/wasm/');
-    ifcLoaderRef.current = ifcLoader;
-
-    // Инициализация OrbitControls
+    // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
-    // Инициализация Raycaster
-    const raycaster = new THREE.Raycaster();
-    raycasterRef.current = raycaster;
+    // Raycaster
+    raycasterRef.current = new THREE.Raycaster();
 
-    // Обработчик клика
-    const onMouseClick = async (event) => {
-      const container = containerRef.current;
-      if (!container) return;
+    // IFCLoader
+    const ifcLoader = new IFCLoader();
+    // указываем путь к web-ifc.wasm
+    ifcLoader.ifcManager.setWasmPath(wasmPath);
+    ifcLoaderRef.current = ifcLoader;
 
-      const rect = container.getBoundingClientRect();
-      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouseRef.current, camera);
-      
-      if (ifcModelRef.current) {
-        const intersects = raycaster.intersectObjects([ifcModelRef.current], true);
-        
-        if (intersects.length > 0) {
-          const intersection = intersects[0];
-          const expressID = ifcLoader.ifcManager.getExpressId(intersection.object.geometry, intersection.faceIndex);
-
-          if (expressID !== undefined) {
-             try {
-                const props = await ifcLoader.ifcManager.getItemProperties(modelIDRef.current, expressID);
-                setElementProperties(props);
-                setSelectedElement({ expressID, ...props });
-              } catch (err) {
-                console.error('Error getting properties:', err);
-                setElementProperties(null);
-                setSelectedElement(null);
-              }
-          }
-        } else {
-          setSelectedElement(null);
-          setElementProperties(null);
-        }
-      }
-    };
-
-    renderer.domElement.addEventListener('click', onMouseClick);
-
+    // Анимация
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -198,97 +92,203 @@ const IFCViewer = ({ onModelLoaded }) => {
     };
     animate();
 
+    // Resize
     const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      if (!containerRef.current || !cameraRef.current || !rendererRef.current) return;
+      const w = containerRef.current.clientWidth;
+      const h = containerRef.current.clientHeight;
+      rendererRef.current.setSize(w, h);
+      cameraRef.current.aspect = w / h;
+      cameraRef.current.updateProjectionMatrix();
     };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
+    // Очистка
     return () => {
-      window.removeEventListener('resize', handleResize);
-      renderer.domElement.removeEventListener('click', onMouseClick);
-      if (controls) controls.dispose();
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement);
-      }
+      window.removeEventListener("resize", handleResize);
+      controls.dispose();
       renderer.dispose();
+      if (containerRef.current && renderer.domElement) {
+        try {
+          containerRef.current.removeChild(renderer.domElement);
+        } catch {}
+      }
     };
-  }, []);
+  }, [wasmPath]);
 
-  const handleFileLoad = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+  // --- Вспомогательные функции для работы с деревом ---
 
+  // Построить TreeNode из spatial structure, рекурсивно
+  const buildTreeFromSpatial = (item, level = 0) => {
+    const typeRaw = item.type || "";
+    const type = String(typeRaw).replace(/^IFC/i, "");
+    // Попробуем получить читабельное имя
+    let name = "";
+    if (item.Name) name = item.Name?.value ?? item.Name;
+    else if (item.LongName) name = item.LongName?.value ?? item.LongName;
+    else if (item.Description) name = item.Description?.value ?? item.Description;
+    if (!name) name = type || `Node ${item.expressID ?? Math.random()}`;
+
+    const nodeId = item.expressID ? String(item.expressID) : `${type}-${Math.random().toString(36).slice(2, 8)}`;
+
+    const node = {
+      id: nodeId,
+      expressID: item.expressID ?? null,
+      name: name,
+      type,
+      level,
+      children: [],
+    };
+
+    if (Array.isArray(item.children) && item.children.length > 0) {
+      node.children = item.children.map((c) => buildTreeFromSpatial(c, level + 1));
+    }
+
+    return node;
+  };
+
+  // Собрать все expressID из поддерева (рекурсивно)
+  const collectExpressIDs = (node, result = new Set()) => {
+    if (node.expressID != null) result.add(node.expressID);
+    node.children.forEach((ch) => collectExpressIDs(ch, result));
+    return result;
+  };
+
+  // Получить массив uuid (mesh) по expressID (используем карту)
+  const getUUIDsForExpress = (expressID) => {
+    const map = expressToUUIDsRef.current;
+    const key = String(expressID);
+    return map.has(key) ? map.get(key) : [];
+  };
+
+  // Рекурсивный переключатель видимости по узлу (expressID может быть null для чисто логических узлов)
+  const setVisibilityByNode = (node, visible) => {
+    // получаем все expressIDs из поддерева
+    const expressIDs = collectExpressIDs(node);
+    const uuidList = [];
+    expressIDs.forEach((id) => {
+      const uuids = getUUIDsForExpress(id);
+      uuids.forEach((u) => uuidList.push(u));
+    });
+
+    // если узел не имеет expressID и нет потомков с expressID,
+    // можем попытаться найти по node.id как uuid
+    if (uuidList.length === 0) {
+      const mesh = meshMapRef.current.get(node.id);
+      if (mesh) uuidList.push(node.id);
+    }
+
+    // применяем видимость
+    const newVisibility = { ...meshVisibilityMap };
+    uuidList.forEach((uuid) => {
+      const mesh = meshMapRef.current.get(uuid);
+      if (mesh) {
+        mesh.visible = visible;
+        newVisibility[uuid] = visible;
+      }
+    });
+    setMeshVisibilityMap(newVisibility);
+  };
+
+  // Функция переключения чекбокса узла
+  const onToggleNode = (node, checked) => {
+    // переключаем узел и всех потомков
+    // рекурсивно идём и ищем все expressID в поддереве
+    setVisibilityByNode(node, checked);
+  };
+
+  // --- Загрузка файла и постобработка ---
+
+  const handleFile = async (file) => {
+    if (!file || !ifcLoaderRef.current || !sceneRef.current) return;
     setIsLoading(true);
     setError(null);
 
     try {
-      const url = URL.createObjectURL(file);
-      
-      if (ifcModelRef.current) {
-        sceneRef.current.remove(ifcModelRef.current);
-        ifcModelRef.current = null;
+      // Очистим предыдущую модель и карты
+      if (modelRef.current && sceneRef.current) {
+        sceneRef.current.remove(modelRef.current);
+        modelRef.current.traverse((child) => {
+          if (child.geometry) {
+            child.geometry.dispose();
+          }
+          if (child.material) {
+            const m = child.material;
+            try {
+              m.dispose();
+            } catch {}
+          }
+        });
+        meshMapRef.current.clear();
+        expressToUUIDsRef.current.clear();
+        setTreeRoot(null);
+        setMeshVisibilityMap({});
+        setSelectedProps(null);
+        setSelectedExpressId(null);
       }
-      setSelectedElement(null);
-      setElementProperties(null);
-      setModelTree(null);
-      
+
+      const url = URL.createObjectURL(file);
       const ifcModel = await ifcLoaderRef.current.loadAsync(url);
-      ifcModelRef.current = ifcModel;
-      modelIDRef.current = ifcModel.modelID;
-      
-      const meshMap = new Map();
-      const visibilityMap = new Map();
-      const expressIDMap = new Map();
-      
+      URL.revokeObjectURL(url);
+
+      // Сохраним модель и modelID
+      modelRef.current = ifcModel;
+      if (sceneRef.current) sceneRef.current.add(ifcModel);
+
+      // Заполним meshMap и express->uuid карту
       ifcModel.traverse((child) => {
         if (child.isMesh) {
-          meshMap.set(child.uuid, child);
-          visibilityMap.set(child.uuid, true);
-          
-          const ids = child.geometry.attributes.expressID.array;
-          const uniqueIds = [...new Set(ids)];
-          uniqueIds.forEach(id => {
-            if (!expressIDMap.has(String(id))) {
-              expressIDMap.set(String(id), []);
-            }
-            expressIDMap.get(String(id)).push(child.uuid);
-          });
+          const mesh = child;
+          meshMapRef.current.set(mesh.uuid, mesh);
+
+          // атрибут expressID может быть в geometry.attributes.expressID
+          const idsAttr = mesh.geometry.attributes?.expressID;
+          if (idsAttr) {
+            const arr = idsAttr.array;
+            const unique = Array.from(new Set(Array.from(arr)));
+            unique.forEach((idNum) => {
+              const key = String(idNum);
+              if (!expressToUUIDsRef.current.has(key)) expressToUUIDsRef.current.set(key, []);
+              expressToUUIDsRef.current.get(key).push(mesh.uuid);
+            });
+          }
         }
       });
-      
-      meshMapRef.current = meshMap;
-      expressIDToUUIDMapRef.current = expressIDMap;
-      setMeshVisibilityMap(visibilityMap);
-      
-      const spatialStructure = await ifcLoaderRef.current.ifcManager.getSpatialStructure(ifcModel.modelID, true);
-      
-      const buildTree = (item, level = 0) => {
-        const type = item.type.replace('IFC', '');
-        let name = '';
-        if (item.Name) name = item.Name.value;
-        else if (item.LongName) name = item.LongName.value;
-        
-        const node = {
-          id: String(item.expressID),
-          name: name || type,
-          type: type,
-          expressID: item.expressID,
-          level: level,
-          children: item.children.map(child => buildTree(child, level + 1))
-        };
-        return node;
-      };
-      
-      const tree = buildTree(spatialStructure);
-      setModelTree(tree);
-      
-      // Раскрываем корневой элемент по умолчанию
-      setExpandedNodes(new Set([tree.id]));
 
-      sceneRef.current.add(ifcModel);
-      
+      // Создаём начальную карту видимости (все true)
+      const initialVis = {};
+      for (const uuid of meshMapRef.current.keys()) initialVis[uuid] = true;
+      setMeshVisibilityMap(initialVis);
+
+      // Получаем пространственную структуру (spatial tree)
+      try {
+        const spatial = await ifcLoaderRef.current.ifcManager.getSpatialStructure(ifcModel.modelID, true);
+        const root = buildTreeFromSpatial(spatial, 0);
+        setTreeRoot(root);
+
+        // автоматически раскрыть корень
+        setExpandedIds({ [root.id]: true });
+      } catch (e) {
+        // Фоллбэк: если spatial не доступен, создать плоский список по meshMap
+        const pseudoRoot = {
+          id: "root",
+          name: "Model",
+          type: "MODEL",
+          level: 0,
+          children: Array.from(meshMapRef.current.entries()).map(([uuid, mesh], idx) => ({
+            id: uuid,
+            expressID: null,
+            name: mesh.name || `Mesh ${idx}`,
+            type: mesh.type || "Mesh",
+            level: 1,
+            children: [],
+          })),
+        };
+        setTreeRoot(pseudoRoot);
+        setExpandedIds({ [pseudoRoot.id]: true });
+      }
+
+      // Центрируем камеру на объекте
       const box = new THREE.Box3().setFromObject(ifcModel);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
@@ -296,215 +296,351 @@ const IFCViewer = ({ onModelLoaded }) => {
       const fov = cameraRef.current.fov * (Math.PI / 180);
       let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
       cameraZ *= 1.5;
+      if (cameraRef.current) {
+        cameraRef.current.position.set(center.x, center.y, cameraZ);
+        cameraRef.current.lookAt(center);
+      }
 
-      cameraRef.current.position.set(center.x, center.y, center.z + cameraZ);
-      controlsRef.current.target.copy(center);
-      controlsRef.current.update();
-
+      // Callback для родителя
       if (onModelLoaded) onModelLoaded(ifcModel);
-      URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Ошибка загрузки IFC файла:', err);
-      setError('Ошибка загрузки файла. Убедитесь, что файл является корректным IFC файлом.');
+      console.error("IFC load error:", err);
+      setError("Ошибка загрузки IFC. Проверьте файл и путь к web-ifc.wasm.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // === НОВАЯ ФУНКЦИЯ ДЛЯ ИЕРАРХИЧЕСКОГО ПЕРЕКЛЮЧЕНИЯ ВИДИМОСТИ ===
-  const toggleElementVisibility = useCallback((node, checked) => {
-    const visibilityMap = new Map(meshVisibilityMap);
-    const expressIDMap = expressIDToUUIDMapRef.current;
-    
-    // Рекурсивная функция для применения видимости
-    const applyVisibility = (currentNode) => {
-      const nodeID = String(currentNode.expressID);
-      if (expressIDMap.has(nodeID)) {
-        const uuids = expressIDMap.get(nodeID);
-        uuids.forEach(uuid => {
-          const mesh = meshMapRef.current.get(uuid);
-          if (mesh) {
-            mesh.visible = checked;
-            visibilityMap.set(uuid, checked);
-          }
-        });
+  // Обработчик input file
+  const onFileInputChange = (e) => {
+    const f = e.target.files?.[0] ?? null;
+    handleFile(f);
+  };
+
+  // --- Обработка клика по сцене для получения expressID и свойств ---
+  useEffect(() => {
+    const handler = async (event) => {
+      if (!containerRef.current || !cameraRef.current || !raycasterRef.current || !ifcLoaderRef.current || !modelRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      if (raycasterRef.current) {
+        raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
       }
-      // Применяем то же состояние для всех дочерних элементов
-      if (currentNode.children) {
-        currentNode.children.forEach(child => applyVisibility(child));
+      // для точности — ищем среди всех mesh'ей модели
+      const allMeshes = Array.from(meshMapRef.current.values());
+      const intersects = raycasterRef.current ? raycasterRef.current.intersectObjects(allMeshes, true) : [];
+      if (!intersects || intersects.length === 0) {
+        // клик по пустому месту — сброс выбора
+        setSelectedProps(null);
+        setSelectedExpressId(null);
+        // удалить подсветку
+        if (selectedSubsetRef.current && modelRef.current) {
+          try {
+            ifcLoaderRef.current.ifcManager.removeSubset(modelRef.current.modelID, selectedSubsetRef.current.material);
+          } catch {}
+          selectedSubsetRef.current = null;
+        }
+        return;
+      }
+
+      const intersection = intersects[0];
+      const picked = intersection.object;
+
+      // Попробуем получить expressID:
+      let expressID = null;
+      try {
+        // Если геометрия имеет attribute expressID
+        const geomAttrs = picked.geometry.attributes;
+        if (geomAttrs && geomAttrs.expressID) {
+          // faceIndex -> vertex index -> expressID value
+          const idx = intersection.faceIndex;
+          const indexArr = picked.geometry.index?.array;
+          if (indexArr) {
+            const vertexIndex = indexArr[3 * idx]; // индекс первой вершины полигона
+            expressID = geomAttrs.expressID.getX(vertexIndex);
+          }
+        }
+      } catch (e) {
+        // игнорируем
+      }
+
+      // Альтернативный способ — через IFCManager.getExpressId(geometry, faceIndex)
+      try {
+        if (!expressID && ifcLoaderRef.current.ifcManager.getExpressId) {
+          expressID = ifcLoaderRef.current.ifcManager.getExpressId(picked.geometry, intersection.faceIndex);
+        }
+      } catch (e) {}
+
+      // Ещё способ: userData может содержать expressID
+      if (!expressID && picked.userData?.expressID) {
+        expressID = picked.userData.expressID;
+      }
+
+      if (!expressID) {
+        console.warn("Не удалось получить expressID для выбранного объекта");
+        setSelectedProps(null);
+        setSelectedExpressId(null);
+        return;
+      }
+
+      // Получаем свойства
+      try {
+        if (!modelRef.current) return;
+        const props = await ifcLoaderRef.current.ifcManager.getItemProperties(modelRef.current.modelID, expressID, true);
+        setSelectedProps(props);
+        setSelectedExpressId(expressID);
+      } catch (err) {
+        console.error("Error getItemProperties", err);
+        setSelectedProps(null);
+        setSelectedExpressId(expressID);
+      }
+
+      // Подсветим элемент с помощью createSubset
+      try {
+        // Удалим предыдущий subset
+        if (selectedSubsetRef.current && modelRef.current) {
+          try {
+            ifcLoaderRef.current.ifcManager.removeSubset(modelRef.current.modelID, selectedSubsetRef.current.material);
+          } catch {}
+          selectedSubsetRef.current = null;
+        }
+
+        // Получим все uuids для expressID
+        const uuids = getUUIDsForExpress(expressID);
+        // Если нет прямых uuid — попробуем создать subset по ids
+        // createSubset принимает ids (expressIDs)
+        if (!modelRef.current || !sceneRef.current) return;
+        const subset = ifcLoaderRef.current.ifcManager.createSubset({
+          modelID: modelRef.current.modelID,
+          ids: [expressID],
+          scene: sceneRef.current,
+          removePrevious: true,
+          material: HIGHLIGHT_MATERIAL,
+        });
+
+        // Сохраняем
+        if (subset) {
+          selectedSubsetRef.current = subset;
+        }
+      } catch (e) {
+        console.warn("Subset highlight failed:", e);
       }
     };
-    
-    applyVisibility(node);
-    setMeshVisibilityMap(visibilityMap);
-  }, [meshVisibilityMap]);
 
-  // Функция для сворачивания/разворачивания узлов
-  const handleToggleExpand = useCallback((nodeId) => {
-    setExpandedNodes(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(nodeId)) {
-        newSet.delete(nodeId);
-      } else {
-        newSet.add(nodeId);
+    // Повесим слушатель клика на canvas
+    const canvas = rendererRef.current?.domElement;
+    canvas?.addEventListener("click", handler);
+    return () => {
+      canvas?.removeEventListener("click", handler);
+    };
+  }, [meshVisibilityMap]); // пересоздаётся при изменении видимости (но это не критично)
+
+  // --- UI: Рендер дерева рекурсивно ---
+  const toggleExpand = (id) => {
+    setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const renderNode = (node) => {
+    const isExpanded = !!expandedIds[node.id];
+    const hasChildren = node.children.length > 0;
+
+    // чекбокс: вычислим агрегированную видимость всех связанных mesh'ей
+    const checked = (() => {
+      // получаем expressIDs в поддереве
+      const ids = collectExpressIDs(node);
+      if (ids.size > 0) {
+        // для каждого expressID получаем uuid'ы и проверяем их видимость
+        let allVisible = true;
+        let anyExists = false;
+        ids.forEach((id) => {
+          const uuids = getUUIDsForExpress(id);
+          if (uuids.length > 0) anyExists = true;
+          uuids.forEach((u) => {
+            const v = meshVisibilityMap[u];
+            if (v === false) allVisible = false;
+          });
+        });
+        if (anyExists) return allVisible;
       }
-      return newSet;
-    });
-  }, []);
-
-  return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {/* ... (панель загрузки файла остается без изменений) */}
-        <div style={{
-        position: 'absolute',
-        top: '20px',
-        left: '20px',
-        zIndex: 1000,
-        background: 'rgba(255, 255, 255, 0.9)',
-        padding: '15px',
-        borderRadius: '8px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-      }}>
-        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Загрузка IFC файла</h3>
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".ifc"
-          onChange={handleFileLoad}
-          style={{ marginBottom: '10px' }}
-        />
-        {isLoading && (
-          <div style={{ color: '#007ad9', fontSize: '14px' }}>
-            Загрузка файла...
-          </div>
-        )}
-        {error && (
-          <div style={{ color: '#e74c3c', fontSize: '14px', marginTop: '10px' }}>
-            {error}
-          </div>
-        )}
-      </div>
-
-      {/* === ОБНОВЛЕННАЯ ПАНЕЛЬ ДЕРЕВА ЭЛЕМЕНТОВ === */}
-      {modelTree && (
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '20px',
-          width: '320px',
-          maxHeight: '50%',
-          overflowY: 'auto',
-          zIndex: 1000,
-          background: 'rgba(255, 255, 255, 0.95)',
-          padding: '15px',
-          borderRadius: '8px',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ margin: '0 0 15px 0', fontSize: '16px' }}>Элементы модели</h3>
-          <div style={{ maxHeight: 'calc(50vh - 80px)', overflowY: 'auto' }}>
-            <TreeNode 
-              node={modelTree}
-              onToggleVisibility={toggleElementVisibility}
-              visibleMap={{
-                visibility: meshVisibilityMap,
-                expressIDToUUID: expressIDToUUIDMapRef.current
-              }}
-              onToggleExpand={handleToggleExpand}
-              expandedSet={expandedNodes}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Контейнер для 3D сцены */}
-      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
-
-      {/* ... (панель свойств остается без изменений) */}
-       {elementProperties && (
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          width: '300px',
-          maxHeight: '80%',
-          overflowY: 'auto',
-          zIndex: 1000,
-          background: 'rgba(255, 255, 255, 0.95)',
-          padding: '15px',
-          borderRadius: '8px',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <h3 style={{ margin: 0, fontSize: '16px' }}>Свойства элемента</h3>
-            <button 
-              onClick={() => {
-                setElementProperties(null);
-                setSelectedElement(null);
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '20px',
-                cursor: 'pointer',
-                color: '#666'
-              }}
-            >
-              ×
-            </button>
-          </div>
-          <div style={{ fontSize: '12px', color: '#666', marginBottom: '15px' }}>
-            Express ID: {selectedElement?.expressID}
-          </div>
-          <div style={{ maxHeight: 'calc(80vh - 100px)', overflowY: 'auto' }}>
-            {renderProperties(elementProperties)}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ... (функция renderProperties остается без изменений)
-const renderProperties = (obj, depth = 0) => {
-  if (!obj || typeof obj !== 'object') {
-    return <span>{String(obj)}</span>;
-  }
-
-  if (depth > 5) {
-    return <span>...</span>;
-  }
-
-  return Object.entries(obj).map(([key, value]) => {
-    // Пропускаем технические поля
-    if (key.startsWith('$') || key === 'type') {
-      return null;
-    }
-
-    const isObject = value && typeof value === 'object';
-    const isArray = Array.isArray(value);
+      // fallback: если node.id возможно является uuid
+      const mv = meshVisibilityMap[node.id];
+      return mv !== false;
+    })();
 
     return (
-      <div key={key} style={{ marginLeft: `${depth * 15}px`, marginBottom: '8px' }}>
-        <div style={{ fontWeight: isObject || isArray ? 'bold' : 'normal', color: '#333' }}>
-          {key}:
+      <div key={node.id}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: "3px 4px",
+            paddingLeft: `${node.level * 12}px`,
+            gap: 8,
+          }}
+        >
+          {hasChildren ? (
+            <button
+              onClick={() => toggleExpand(node.id)}
+              style={{
+                width: 18,
+                height: 18,
+                padding: 0,
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                lineHeight: 1,
+              }}
+              title={isExpanded ? "Свернуть" : "Развернуть"}
+            >
+              {isExpanded ? "▾" : "▸"}
+            </button>
+          ) : (
+            <div style={{ width: 18 }} />
+          )}
+
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => onToggleNode(node, e.target.checked)}
+            style={{ cursor: "pointer" }}
+          />
+
+          <div style={{ flex: 1, fontSize: 13, color: node.level === 0 ? "#222" : "#444" }}>
+            <strong style={{ fontWeight: node.level === 0 ? 600 : 400 }}>{node.type ? `${node.type} ` : ""}</strong>
+            <span>{node.name}</span>
+            {node.expressID != null ? <span style={{ marginLeft: 6, color: "#888", fontSize: 11 }}>#{node.expressID}</span> : null}
+          </div>
         </div>
-        {isArray ? (
-          <div style={{ marginLeft: '10px', fontSize: '13px', color: '#666' }}>
-            Array[{value.length}]
-          </div>
-        ) : isObject ? (
-          <div style={{ marginLeft: '10px' }}>
-            {renderProperties(value, depth + 1)}
-          </div>
-        ) : (
-          <div style={{ marginLeft: '10px', fontSize: '13px', color: '#666' }}>
-            {String(value)}
+
+        {hasChildren && isExpanded && (
+          <div>
+            {node.children.map((c) => (
+              <Fragment key={c.id}>{renderNode(c)}</Fragment>
+            ))}
           </div>
         )}
       </div>
     );
-  }).filter(Boolean);
-};
+  };
 
+  // Простая отрисовка свойств объекта
+  const renderProperties = (obj, depth = 0) => {
+    if (!obj || typeof obj !== "object") return <div style={{ marginLeft: depth * 10 }}>{String(obj)}</div>;
+    if (depth > 6) return <div style={{ marginLeft: depth * 10 }}>...</div>;
+
+    return Object.entries(obj).map(([k, v]) => {
+      if (k.startsWith("$") || k === "type") return null;
+      const isObj = v && typeof v === "object";
+      return (
+        <div key={k} style={{ marginLeft: depth * 8, marginBottom: 6 }}>
+          <div style={{ fontSize: 12, color: "#333", fontWeight: isObj ? 600 : 500 }}>{k}:</div>
+          {isObj ? renderProperties(v, depth + 1) : <div style={{ color: "#555", fontSize: 13 }}>{String(v)}</div>}
+        </div>
+      );
+    });
+  };
+
+  return (
+    <div style={{ width: "100%", height: "100%", position: "relative", fontFamily: "Inter, Roboto, Arial" }}>
+      {/* Панель загрузки */}
+      <div
+        style={{
+          position: "absolute",
+          left: 12,
+          top: 12,
+          zIndex: 1200,
+          background: "rgba(255,255,255,0.95)",
+          padding: 12,
+          borderRadius: 8,
+          boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+        }}
+      >
+        <div style={{ marginBottom: 8, fontWeight: 600 }}>Загрузка IFC</div>
+        <input accept=".ifc" type="file" onChange={onFileInputChange} />
+        {isLoading && <div style={{ marginTop: 8, color: "#0078ff" }}>Загрузка...</div>}
+        {error && <div style={{ marginTop: 8, color: "#e54848" }}>{error}</div>}
+      </div>
+
+      {/* Панель дерева */}
+      {treeRoot && (
+        <div
+          style={{
+            position: "absolute",
+            left: 12,
+            bottom: 12,
+            width: 340,
+            maxHeight: "60vh",
+            overflow: "auto",
+            zIndex: 1200,
+            background: "rgba(255,255,255,0.98)",
+            padding: 12,
+            borderRadius: 8,
+            boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+          }}
+        >
+          <div style={{ marginBottom: 8, fontWeight: 600 }}>Элементы модели</div>
+          <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
+            Узлов: {/* подсчитать бы — можно рекурсивно, но опустим для компактности */}{" "}
+          </div>
+          <div>{renderNode(treeRoot)}</div>
+        </div>
+      )}
+
+      {/* Панель свойств */}
+      {selectedProps && (
+        <div
+          style={{
+            position: "absolute",
+            right: 12,
+            top: 12,
+            width: 360,
+            maxHeight: "80vh",
+            overflow: "auto",
+            zIndex: 1200,
+            background: "rgba(255,255,255,0.98)",
+            padding: 12,
+            borderRadius: 8,
+            boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={{ fontWeight: 700 }}>Свойства</div>
+            <div style={{ color: "#666", fontSize: 12 }}>ExpressID: {selectedExpressId}</div>
+          </div>
+          <div style={{ fontSize: 13, color: "#333" }}>{renderProperties(selectedProps)}</div>
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={() => {
+                setSelectedProps(null);
+                setSelectedExpressId(null);
+                // убрать подсветку
+                if (ifcLoaderRef.current && modelRef.current && selectedSubsetRef.current) {
+                  try {
+                    ifcLoaderRef.current.ifcManager.removeSubset(modelRef.current.modelID, selectedSubsetRef.current.material);
+                  } catch {}
+                  selectedSubsetRef.current = null;
+                }
+              }}
+              style={{
+                padding: "6px 10px",
+                borderRadius: 6,
+                border: "none",
+                background: "#f3f4f6",
+                cursor: "pointer",
+              }}
+            >
+              Закрыть
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Контейнер сцены */}
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+    </div>
+  );
+};
 
 export default IFCViewer;
