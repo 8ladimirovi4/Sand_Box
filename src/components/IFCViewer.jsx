@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { IFCLoader } from 'web-ifc-three';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const IFCViewer = ({ onModelLoaded }) => {
   const containerRef = useRef(null);
@@ -9,8 +10,17 @@ const IFCViewer = ({ onModelLoaded }) => {
   const rendererRef = useRef(null);
   const cameraRef = useRef(null);
   const ifcLoaderRef = useRef(null);
+  const controlsRef = useRef(null);
+  const raycasterRef = useRef(null);
+  const mouseRef = useRef(new THREE.Vector2());
+  const ifcModelRef = useRef(null);
+  const selectedElementRef = useRef(null);
+  const modelIDRef = useRef(null);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedElement, setSelectedElement] = useState(null);
+  const [elementProperties, setElementProperties] = useState(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -55,9 +65,111 @@ const IFCViewer = ({ onModelLoaded }) => {
     ifcLoader.ifcManager.setWasmPath('/wasm/');
     ifcLoaderRef.current = ifcLoader;
 
+    // Инициализация OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controlsRef.current = controls;
+
+    // Инициализация Raycaster
+    const raycaster = new THREE.Raycaster();
+    raycasterRef.current = raycaster;
+
+    // Обработчик клика
+    const onMouseClick = async (event) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouseRef.current, camera);
+      
+      if (ifcModelRef.current) {
+        const intersects = raycaster.intersectObject(ifcModelRef.current, true);
+        
+        if (intersects.length > 0) {
+          const intersection = intersects[0];
+          
+          try {
+            let expressID = null;
+            
+            // Попытка получить Express ID из атрибутов геометрии
+            if (intersection.object.geometry?.attributes?.expressID) {
+              console.log('intersection.object',intersection.object);
+              const ids = intersection.object.geometry.attributes.expressID.array;
+              if (ids.length > 0) {
+                expressID = ids[0];
+              }
+            }
+            
+            // Альтернативный способ - получение Express ID через userData
+            if (!expressID && intersection.object.userData?.expressID) {
+              expressID = intersection.object.userData.expressID;
+            }
+
+            // Еще один способ - через геометрию напрямую
+            if (!expressID && intersection.object.geometry) {
+              try {
+                // Используем метод IFCManager для получения Express ID
+                const geom = intersection.object.geometry;
+                expressID = ifcLoader.ifcManager.getExpressId(geom, intersection.faceIndex);
+              } catch (e) {
+                console.log('Alternative express ID retrieval failed:', e);
+              }
+            }
+
+            console.log('Clicked on element with Express ID:', expressID);
+
+            // Сбрасываем предыдущую подсветку
+            if (selectedElementRef.current) {
+             // selectedElementRef.current.material.emissive.setHex(0x000000);
+            }
+
+            // Подсвечиваем выбранный элемент
+            if (intersection.object.material) {
+             // intersection.object.material.emissive.setHex(0x00ff00);
+              selectedElementRef.current = intersection.object;
+
+              // Получаем свойства элемента
+              if (expressID && modelIDRef.current !== null) {
+                try {
+                  const props = await ifcLoader.ifcManager.getItemProperties(modelIDRef.current, expressID);
+                  console.log('Element properties:', props);
+                  setElementProperties(props);
+                  setSelectedElement({
+                    expressID,
+                    type: props.type || 'Unknown',
+                    ...props
+                  });
+                } catch (err) {
+                  console.error('Error getting properties:', err);
+                  setElementProperties(null);
+                  setSelectedElement(null);
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error processing click:', error);
+          }
+        } else {
+          // Клик по пустому пространству
+          if (selectedElementRef.current) {
+           // selectedElementRef.current.material.emissive.setHex(0x000000);
+          }
+          setSelectedElement(null);
+          setElementProperties(null);
+        }
+      }
+    };
+
+    renderer.domElement.addEventListener('click', onMouseClick);
+
     // Функция анимации
     const animate = () => {
       requestAnimationFrame(animate);
+      controls.update();
       renderer.render(scene, camera);
     };
     animate();
@@ -73,6 +185,8 @@ const IFCViewer = ({ onModelLoaded }) => {
     // Очистка при размонтировании
     return () => {
       window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('click', onMouseClick);
+      if (controls) controls.dispose();
       if (containerRef.current && renderer.domElement) {
         containerRef.current.removeChild(renderer.domElement);
       }
@@ -90,8 +204,27 @@ const IFCViewer = ({ onModelLoaded }) => {
     try {
       const url = URL.createObjectURL(file);
       
+      // Удаляем предыдущую модель если есть
+      if (ifcModelRef.current) {
+        sceneRef.current.remove(ifcModelRef.current);
+        ifcModelRef.current = null;
+      }
+
+      // Сбрасываем выбор
+      if (selectedElementRef.current) {
+        selectedElementRef.current.material.emissive.setHex(0x000000);
+      }
+      setSelectedElement(null);
+      setElementProperties(null);
+      
       // Загружаем IFC модель
       const ifcModel = await ifcLoaderRef.current.loadAsync(url);
+      
+      // Сохраняем ссылку на модель
+      ifcModelRef.current = ifcModel;
+      
+      // Сохраняем ID модели
+      modelIDRef.current = ifcModel.modelID;
       
       // Добавляем модель в сцену
       sceneRef.current.add(ifcModel);
@@ -158,8 +291,95 @@ const IFCViewer = ({ onModelLoaded }) => {
 
       {/* Контейнер для 3D сцены */}
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+
+      {/* Панель свойств элемента */}
+      {elementProperties && (
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          width: '300px',
+          maxHeight: '80%',
+          overflowY: 'auto',
+          zIndex: 1000,
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '15px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <h3 style={{ margin: 0, fontSize: '16px' }}>Свойства элемента</h3>
+            <button 
+              onClick={() => {
+                setElementProperties(null);
+                setSelectedElement(null);
+                if (selectedElementRef.current) {
+                  selectedElementRef.current.material.emissive.setHex(0x000000);
+                }
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '20px',
+                cursor: 'pointer',
+                color: '#666'
+              }}
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ fontSize: '12px', color: '#666', marginBottom: '15px' }}>
+            Express ID: {selectedElement?.expressID}
+          </div>
+          <div style={{ maxHeight: 'calc(80vh - 100px)', overflowY: 'auto' }}>
+            {renderProperties(elementProperties)}
+          </div>
+        </div>
+      )}
     </div>
   );
+};
+
+// Функция для отображения свойств объекта
+const renderProperties = (obj, depth = 0) => {
+  if (!obj || typeof obj !== 'object') {
+    return <span>{String(obj)}</span>;
+  }
+
+  if (depth > 5) {
+    return <span>...</span>;
+  }
+
+  return Object.entries(obj).map(([key, value]) => {
+    // Пропускаем технические поля
+    if (key.startsWith('$') || key === 'type') {
+      return null;
+    }
+
+    const isObject = value && typeof value === 'object';
+    const isArray = Array.isArray(value);
+
+    return (
+      <div key={key} style={{ marginLeft: `${depth * 15}px`, marginBottom: '8px' }}>
+        <div style={{ fontWeight: isObject || isArray ? 'bold' : 'normal', color: '#333' }}>
+          {key}:
+        </div>
+        {isArray ? (
+          <div style={{ marginLeft: '10px', fontSize: '13px', color: '#666' }}>
+            Array[{value.length}]
+          </div>
+        ) : isObject ? (
+          <div style={{ marginLeft: '10px' }}>
+            {renderProperties(value, depth + 1)}
+          </div>
+        ) : (
+          <div style={{ marginLeft: '10px', fontSize: '13px', color: '#666' }}>
+            {String(value)}
+          </div>
+        )}
+      </div>
+    );
+  }).filter(Boolean);
 };
 
 export default IFCViewer;
