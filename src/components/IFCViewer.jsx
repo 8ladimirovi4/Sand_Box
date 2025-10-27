@@ -87,40 +87,70 @@ const IFCViewer = ({ onModelLoaded }) => {
       raycaster.setFromCamera(mouseRef.current, camera);
       
       if (ifcModelRef.current) {
-        const intersects = raycaster.intersectObject(ifcModelRef.current, true);
+        // Получаем все meshes из модели
+        const allMeshes = [];
+        ifcModelRef.current.traverse((child) => {
+          if (child.isMesh) {
+            allMeshes.push(child);
+          }
+        });
+        
+        console.log('Raycasting against', allMeshes.length, 'meshes');
+        
+        const intersects = raycaster.intersectObjects(allMeshes.length > 0 ? allMeshes : [ifcModelRef.current], true);
+        
+        console.log('Intersects found:', intersects.length);
         
         if (intersects.length > 0) {
           const intersection = intersects[0];
+          
+          console.log('Intersected object:', intersection.object);
+          console.log('Face index:', intersection.faceIndex);
           
           try {
             let expressID = null;
             
             // Попытка получить Express ID из атрибутов геометрии
-            if (intersection.object.geometry?.attributes?.expressID) {
-              console.log('intersection.object',intersection.object);
-              const ids = intersection.object.geometry.attributes.expressID.array;
-              if (ids.length > 0) {
-                expressID = ids[0];
+            // Правильный способ согласно реализации web-ifc-three
+            if (intersection.object.geometry?.attributes) {
+              const attrs = intersection.object.geometry.attributes;
+              console.log('Available attributes:', Object.keys(attrs));
+              
+              // Ищем атрибут expressID (может быть с разными именами)
+              const idAttr = attrs.expressID || attrs.id || attrs.IFC;
+              
+              if (idAttr && intersection.object.geometry.index) {
+                console.log('Getting expressID from geometry using faceIndex');
+                const geoIndex = intersection.object.geometry.index.array;
+                const vertexIndex = geoIndex[3 * intersection.faceIndex];
+                expressID = idAttr.getX(vertexIndex);
+                console.log('Express ID from geometry:', expressID, 'vertexIndex:', vertexIndex);
               }
             }
             
             // Альтернативный способ - получение Express ID через userData
             if (!expressID && intersection.object.userData?.expressID) {
+              console.log('Getting expressID from userData');
               expressID = intersection.object.userData.expressID;
             }
 
             // Еще один способ - через геометрию напрямую
             if (!expressID && intersection.object.geometry) {
               try {
+                console.log('Attempting to get expressID via IFCManager');
                 // Используем метод IFCManager для получения Express ID
                 const geom = intersection.object.geometry;
-                expressID = ifcLoader.ifcManager.getExpressId(geom, intersection.faceIndex);
+                if (ifcLoader.ifcManager.getExpressId) {
+                  expressID = ifcLoader.ifcManager.getExpressId(geom, intersection.faceIndex);
+                  console.log('Express ID from IFCManager:', expressID);
+                }
               } catch (e) {
                 console.log('Alternative express ID retrieval failed:', e);
               }
             }
 
-            console.log('Clicked on element with Express ID:', expressID);
+            console.log('Final Express ID:', expressID);
+            console.log('Model ID:', modelIDRef.current);
 
             // Сбрасываем предыдущую подсветку
             if (selectedElementRef.current) {
@@ -225,6 +255,25 @@ const IFCViewer = ({ onModelLoaded }) => {
       
       // Сохраняем ID модели
       modelIDRef.current = ifcModel.modelID;
+      
+      // Выводим структуру модели для отладки
+      console.log('=== IFC Model Structure ===');
+      console.log('Model ID:', ifcModel.modelID);
+      console.log('Model children count:', ifcModel.children.length);
+      console.log('Model type:', ifcModel.type);
+      
+      // Логируем все дети модели
+      ifcModel.traverse((child) => {
+        if (child.isMesh) {
+          console.log('Mesh found:', child.name, 'Type:', child.type);
+          if (child.geometry) {
+            console.log('  - Geometry has attributes:', Object.keys(child.geometry.attributes));
+          }
+          if (child.userData) {
+            console.log('  - userData:', child.userData);
+          }
+        }
+      });
       
       // Добавляем модель в сцену
       sceneRef.current.add(ifcModel);
