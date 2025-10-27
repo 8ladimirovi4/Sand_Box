@@ -10,7 +10,6 @@ import {
 } from '@xyflow/react';
 import IFCViewer from './IFCViewer';
 import IFCNode from './IFCNode';
-import MetadataNode from './MetadataNode';
 import '@xyflow/react/dist/style.css';
 
 const initialNodes = [
@@ -23,17 +22,6 @@ const initialNodes = [
     },
     position: { x: 200, y: 200 },
   },
-  {
-    id: 'metadata-1',
-    type: 'metadataNode',
-    data: { 
-      label: 'Метаданные',
-      metadata: null,
-      isLoading: false,
-      error: null
-    },
-    position: { x: 600, y: 200 },
-  },
 ];
 
 const initialEdges = [];
@@ -41,7 +29,6 @@ const initialEdges = [];
 // Определение типов узлов
 const nodeTypes = {
   ifcNode: IFCNode,
-  metadataNode: MetadataNode,
 };
 
 function FlowDiagram() {
@@ -60,67 +47,10 @@ function FlowDiagram() {
     console.log('IFC модель загружена:', model);
   };
 
-  const updateMetadata = (metadata) => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === 'metadata-1') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              metadata: metadata,
-              isLoading: false,
-              error: null
-            }
-          };
-        }
-        return node;
-      })
-    );
-  };
-
-  const setMetadataLoading = (isLoading) => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === 'metadata-1') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              isLoading: isLoading
-            }
-          };
-        }
-        return node;
-      })
-    );
-  };
-
-  const setMetadataError = (error) => {
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === 'metadata-1') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              error: error,
-              isLoading: false
-            }
-          };
-        }
-        return node;
-      })
-    );
-  };
-
   // Устанавливаем обработчик клика для IFCNode
   useEffect(() => {
     const handleMetadataClick = (metadata) => {
-      setMetadataLoading(true);
-      setTimeout(() => {
-        updateMetadata(metadata);
-      }, 500); // Небольшая задержка для демонстрации загрузки
+      console.log('Metadata clicked:', metadata);
     };
 
     setNodes((nds) =>
